@@ -61,27 +61,27 @@ window.DEFAULT_STATE = {
     asbuilt: false
   },
 
+  // Wet/Dry utilities
   disciplines: {
     wet: {},
     dry: {}
   },
 
+  // Detailed general
   general: {
     architecture: {
-      enabled: false,
       facilityCount: 0,
       facilities: [] // [{ area: "", floors: 1 }]
     },
     structure: {
-      enabled: false,
       facilityCount: 0,
       facilities: []
     },
     mep: {
-      systems: {} // { "Lighting": true/false, ... }
+      systems: {}
     },
     landscape: {
-      items: {} // { "Master Planning": true/false, ... }
+      items: {}
     }
   }
 };
