@@ -39,7 +39,7 @@
       <div class="row">
         <div class="field">
           <label>Project Area (sq.m)</label>
-          <input id="projectAreaSqm" type="number">
+          <input id="projectAreaSqm" type="number" min="0">
         </div>
         <div class="field">
           <label>Required Duration (Months)</label>
@@ -51,9 +51,10 @@
         <div class="field">
           <label>Desired Drawing Scale</label>
           <select id="drawingScale">
-            ${APP_CONFIG.drawingScales.map(s => `<option>${s}</option>`).join("")}
+            ${APP_CONFIG.drawingScales.map(s => `<option value="${s}">${s}</option>`).join("")}
           </select>
         </div>
+
         <div class="toggleRow">
           <div class="left">
             <div class="t">BIM Required</div>
@@ -70,6 +71,7 @@
       <div class="checkGrid">${requiredHtml}</div>
 
       <div class="divider"></div>
+
       ${renderGroup("general", "General Disciplines")}
       ${renderGroup("wet", "Wet Utilities")}
       ${renderGroup("dry", "Dry Utilities")}
@@ -79,23 +81,48 @@
   }
 
   function wireEvents() {
-    $("projectName").oninput = e => { state.projectName = e.target.value; preview(); };
-    $("projectAreaSqm").oninput = e => { state.projectAreaSqm = e.target.value; preview(); };
-    $("durationMonths").oninput = e => { state.durationMonths = e.target.value; preview(); };
-    $("drawingScale").onchange = e => { state.drawingScale = e.target.value; preview(); };
-    $("bimRequired").onchange = e => { state.bimRequired = e.target.checked; renderInputs(); preview(); };
+    $("projectName").addEventListener("input", e => {
+      state.projectName = e.target.value;
+      preview();
+    });
 
-    $("inputs").onchange = e => {
+    $("projectAreaSqm").addEventListener("input", e => {
+      state.projectAreaSqm = e.target.value;
+      preview();
+    });
+
+    $("durationMonths").addEventListener("input", e => {
+      state.durationMonths = e.target.value;
+      preview();
+    });
+
+    $("drawingScale").addEventListener("change", e => {
+      state.drawingScale = e.target.value;
+      preview();
+    });
+
+    $("bimRequired").addEventListener("change", e => {
+      state.bimRequired = e.target.checked;
+      renderInputs();
+      preview();
+    });
+
+    $("inputs").addEventListener("change", e => {
       const el = e.target;
       if (el.type !== "checkbox") return;
 
       const group = el.dataset.kind;
       const id = el.dataset.id;
 
-      if (!state.disciplines[group]) state.disciplines[group] = {};
-      state.disciplines[group][id] = el.checked;
+      if (group === "required") {
+        state.requiredDetails[id] = el.checked;
+      } else {
+        if (!state.disciplines[group]) state.disciplines[group] = {};
+        state.disciplines[group][id] = el.checked;
+      }
+
       preview();
-    };
+    });
   }
 
   function preview() {
