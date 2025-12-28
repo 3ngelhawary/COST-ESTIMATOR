@@ -3,42 +3,39 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Consultant Design Cost Estimator</title>
+  <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css?v=3" />
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 
 <header class="header">
   <div class="container">
-    <h1 class="title">Consultant Design Cost Estimator</h1>
-    <div class="subtitle">Prototype • Currency fixed to <span class="badge">$</span></div>
+    <h1 class="title">Design Cost Estimator</h1>
   </div>
 </header>
 
 <main class="container">
-  <div class="layout">
+  <div class="layout" style="grid-template-columns: 1fr 1fr 1fr;">
+
+    <!-- Window 1 -->
     <section class="card">
       <h2 class="cardTitle">Project Data Input</h2>
       <div id="inputs"></div>
-
-      <div class="actions">
-        <button id="calcBtn" type="button">Preview Inputs</button>
-        <button id="resetBtn" type="button" class="secondary">Reset</button>
-      </div>
     </section>
 
+    <!-- Window 2 -->
     <section class="card">
-      <h2 class="cardTitle">Live Preview</h2>
+      <h2 class="cardTitle">Output Data</h2>
 
       <div class="kpis">
         <div class="kpi">
-          <div class="kpiLabel">Currency</div>
-          <div class="kpiValue" id="currencyOut">$</div>
-        </div>
-        <div class="kpi">
           <div class="kpiLabel">Project</div>
           <div class="kpiValue" id="projectOut">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiLabel">Duration (Months)</div>
+          <div class="kpiValue" id="durationOut">—</div>
         </div>
       </div>
 
@@ -46,12 +43,17 @@
 
       <div class="smallLabel">Captured Inputs (JSON)</div>
       <pre class="codebox" id="jsonOut">{}</pre>
-
-      <div class="divider"></div>
-
-      <div class="smallLabel">Debug</div>
-      <pre class="codebox" id="debugOut" style="min-height:120px">No errors.</pre>
     </section>
+
+    <!-- Window 3 -->
+    <section class="card">
+      <h2 class="cardTitle">Pricing (Break Down)</h2>
+      <div class="smallNote">
+        Pricing logic will be added in the next step.<br>
+        This panel is reserved for stage / discipline cost build-up.
+      </div>
+    </section>
+
   </div>
 </main>
 
@@ -59,8 +61,8 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=3"></script>
-<script src="js/calculator.js?v=3"></script>
-<script src="js/ui.js?v=3"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/calculator.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
 </body>
 </html>
