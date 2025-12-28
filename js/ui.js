@@ -63,43 +63,117 @@
     return Number.isFinite(n) ? n : fallback;
   }
 
+  function ensureMaps() {
+    if (!state.disciplines) state.disciplines = { wet: {}, dry: {} };
+    if (!state.disciplines.wet) state.disciplines.wet = {};
+    if (!state.disciplines.dry) state.disciplines.dry = {};
+
+    if (!state.general) state.general = JSON.parse(JSON.stringify(window.DEFAULT_STATE.general));
+
+    if (!state.general.architecture) state.general.architecture = { enabled: false, facilityCount: 0, facilities: [] };
+    if (state.general.architecture.enabled === undefined) state.general.architecture.enabled = false;
+
+    if (!state.general.structure) state.general.structure = { enabled: false, facilityCount: 0, facilities: [] };
+    if (state.general.structure.enabled === undefined) state.general.structure.enabled = false;
+
+    if (!state.general.mep) state.general.mep = { systems: {} };
+    if (!state.general.mep.systems) state.general.mep.systems = {};
+
+    if (!state.general.landscape) state.general.landscape = { items: {} };
+    if (!state.general.landscape.items) state.general.landscape.items = {};
+  }
+
   function normalizeFacilities(block) {
+    const enabled = !!block.enabled;
     const count = Math.max(0, coerceInt(block.facilityCount, 0));
     block.facilityCount = count;
 
     if (!Array.isArray(block.facilities)) block.facilities = [];
     const arr = block.facilities;
 
-    if (arr.length > count) {
-      arr.length = count;
-    } else if (arr.length < count) {
-      while (arr.length < count) {
-        arr.push({ area: "", floors: 1 });
-      }
-    }
+    // keep facilities array length aligned even if disabled (so data isn't lost)
+    if (arr.length > count) arr.length = count;
+    while (arr.length < count) arr.push({ area: "", floors: 1 });
 
-    // enforce floors default >=1
     for (const f of arr) {
       const floors = coerceInt(f.floors, 1);
       f.floors = Math.max(1, floors);
       if (f.area === undefined || f.area === null) f.area = "";
     }
+
+    // if disabled, we still keep the data, but UI will be disabled.
+    return enabled;
   }
 
-  function ensureMaps() {
-    // Wet/Dry
-    if (!state.disciplines) state.disciplines = { wet: {}, dry: {} };
-    if (!state.disciplines.wet) state.disciplines.wet = {};
-    if (!state.disciplines.dry) state.disciplines.dry = {};
+  // ---------- Facility Table Modal ----------
+  function buildFacilityTableHtml(title, blockKey) {
+    const block = state.general[blockKey];
+    normalizeFacilities(block);
 
-    // General
-    if (!state.general) state.general = JSON.parse(JSON.stringify(window.DEFAULT_STATE.general));
-    if (!state.general.architecture) state.general.architecture = { facilityCount: 0, facilities: [] };
-    if (!state.general.structure) state.general.structure = { facilityCount: 0, facilities: [] };
-    if (!state.general.mep) state.general.mep = { systems: {} };
-    if (!state.general.mep.systems) state.general.mep.systems = {};
-    if (!state.general.landscape) state.general.landscape = { items: {} };
-    if (!state.general.landscape.items) state.general.landscape.items = {};
+    const rows = block.facilities.map((f, idx) => {
+      const i = idx + 1;
+      return `
+        <tr>
+          <td class="tCenter">Facility ${i}</td>
+          <td><input class="tInput" type="number" min="0" step="1" data-fkey="${blockKey}" data-row="${idx}" data-col="area" value="${escapeAttr(f.area)}"></td>
+          <td><input class="tInput" type="number" min="1" step="1" data-fkey="${blockKey}" data-row="${idx}" data-col="floors" value="${escapeAttr(f.floors)}"></td>
+        </tr>
+      `;
+    }).join("");
+
+    const body = `
+      <div class="smallNote">
+        Total Facilities: <b>${block.facilityCount}</b>
+      </div>
+
+      <div class="tableWrap">
+        <table class="tTable">
+          <thead>
+            <tr>
+              <th style="width:34%;">Facility No.</th>
+              <th style="width:33%;">Facility Area</th>
+              <th style="width:33%;">No. of Floors</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="3" class="tCenter muted">Set No. of Facilities &gt; 0</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    showModal(title, body);
+
+    const modalBody = document.getElementById("modalBody");
+    modalBody.addEventListener("input", onFacilityTableInput);
+    modalBody.addEventListener("change", onFacilityTableInput);
+  }
+
+  function onFacilityTableInput(e) {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement)) return;
+    if (!el.classList.contains("tInput")) return;
+
+    const blockKey = el.getAttribute("data-fkey");
+    const row = coerceInt(el.getAttribute("data-row"), -1);
+    const col = el.getAttribute("data-col");
+
+    if (!blockKey || row < 0 || !col) return;
+
+    const block = state.general[blockKey];
+    normalizeFacilities(block);
+
+    const rec = block.facilities[row];
+    if (!rec) return;
+
+    if (col === "area") {
+      rec.area = el.value;
+    } else if (col === "floors") {
+      rec.floors = Math.max(1, coerceInt(el.value, 1));
+      el.value = String(rec.floors);
+    }
+
+    preview();
   }
 
   // ---------- Rendering ----------
@@ -124,6 +198,9 @@
         </label>
       `;
     }).join("");
+
+    // Rearranged order AFTER Required Detail:
+    // Wet|Dry -> MEP -> Landscape -> Arch -> Struc
 
     const wetHtml = window.APP_CONFIG.disciplines.wet.map(name => {
       const checked = state.disciplines.wet?.[name] ? "checked" : "";
@@ -165,8 +242,11 @@
       `;
     }).join("");
 
-    const archCount = state.general.architecture.facilityCount ?? 0;
-    const strCount = state.general.structure.facilityCount ?? 0;
+    const arch = state.general.architecture;
+    const str = state.general.structure;
+
+    const archDisabled = arch.enabled ? "" : "disabled";
+    const strDisabled = str.enabled ? "" : "disabled";
 
     $("inputs").innerHTML = `
       <div class="field">
@@ -212,41 +292,6 @@
 
       <div class="divider"></div>
 
-      <!-- General Disciplines (detailed) -->
-      <div class="groupTitle"><h3>Architecture</h3></div>
-      <div class="row">
-        <div class="field">
-          <label>No. of Facilities</label>
-          <input id="archFacilityCount" type="number" min="0" step="1" value="${escapeAttr(archCount)}">
-          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button type="button" class="fullWidth" id="archEditBtn">Edit Table</button>
-        </div>
-      </div>
-
-      <div class="groupTitle"><h3>Structure</h3></div>
-      <div class="row">
-        <div class="field">
-          <label>No. of Facilities</label>
-          <input id="strFacilityCount" type="number" min="0" step="1" value="${escapeAttr(strCount)}">
-          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <button type="button" class="fullWidth" id="strEditBtn">Edit Table</button>
-        </div>
-      </div>
-
-      <div class="groupTitle"><h3>MEP</h3></div>
-      <div class="checkGrid">${mepHtml}</div>
-
-      <div class="groupTitle"><h3>Landscape</h3></div>
-      <div class="checkGrid">${landscapeHtml}</div>
-
-      <div class="divider"></div>
-
       <div class="row">
         <div>
           <div class="groupTitle"><h3>Wet Utilities</h3></div>
@@ -257,91 +302,53 @@
           <div class="checkGrid">${dryHtml}</div>
         </div>
       </div>
+
+      <div class="groupTitle"><h3>MEP</h3></div>
+      <div class="checkGrid">${mepHtml}</div>
+
+      <div class="groupTitle"><h3>Landscape</h3></div>
+      <div class="checkGrid">${landscapeHtml}</div>
+
+      <div class="groupTitle">
+        <h3>Architecture</h3>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
+          <input type="checkbox" id="archEnabled" ${arch.enabled ? "checked" : ""}>
+          Enable
+        </label>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>No. of Facilities</label>
+          <input id="archFacilityCount" type="number" min="0" step="1" value="${escapeAttr(arch.facilityCount ?? 0)}" ${archDisabled}>
+          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="fullWidth" id="archEditBtn" ${archDisabled}>Edit Table</button>
+        </div>
+      </div>
+
+      <div class="groupTitle">
+        <h3>Structure</h3>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
+          <input type="checkbox" id="strEnabled" ${str.enabled ? "checked" : ""}>
+          Enable
+        </label>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>No. of Facilities</label>
+          <input id="strFacilityCount" type="number" min="0" step="1" value="${escapeAttr(str.facilityCount ?? 0)}" ${strDisabled}>
+          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="fullWidth" id="strEditBtn" ${strDisabled}>Edit Table</button>
+        </div>
+      </div>
     `;
 
     wireEvents();
-  }
-
-  // ---------- Facility Table Modal ----------
-  function buildFacilityTableHtml(title, blockKey) {
-    const block = state.general[blockKey];
-    normalizeFacilities(block);
-
-    const rows = block.facilities.map((f, idx) => {
-      const i = idx + 1;
-      return `
-        <tr>
-          <td class="tCenter">Facility ${i}</td>
-          <td><input class="tInput" type="number" min="0" step="1" data-fkey="${blockKey}" data-row="${idx}" data-col="area" value="${escapeAttr(f.area)}"></td>
-          <td><input class="tInput" type="number" min="1" step="1" data-fkey="${blockKey}" data-row="${idx}" data-col="floors" value="${escapeAttr(f.floors)}"></td>
-        </tr>
-      `;
-    }).join("");
-
-    const body = `
-      <div class="smallNote">
-        Total Facilities: <b>${block.facilityCount}</b>
-      </div>
-
-      <div class="tableWrap">
-        <table class="tTable">
-          <thead>
-            <tr>
-              <th style="width:34%;">Facility No.</th>
-              <th style="width:33%;">Facility Area</th>
-              <th style="width:33%;">No. of Floors</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="3" class="tCenter muted">Set No. of Facilities &gt; 0</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    showModal(title, body);
-
-    // wire table inputs
-    const modalBody = document.getElementById("modalBody");
-    modalBody.addEventListener("input", onFacilityTableInput, { once: true });
-    modalBody.addEventListener("change", onFacilityTableInput, { once: true });
-    // Note: we re-attach again after each edit via requestAnimationFrame below
-  }
-
-  function onFacilityTableInput(e) {
-    const el = e.target;
-    if (!(el instanceof HTMLInputElement)) return;
-    if (!el.classList.contains("tInput")) return;
-
-    const blockKey = el.getAttribute("data-fkey");
-    const row = coerceInt(el.getAttribute("data-row"), -1);
-    const col = el.getAttribute("data-col");
-
-    if (!blockKey || row < 0 || !col) return;
-
-    const block = state.general[blockKey];
-    normalizeFacilities(block);
-
-    const rec = block.facilities[row];
-    if (!rec) return;
-
-    if (col === "area") {
-      rec.area = el.value;
-    } else if (col === "floors") {
-      rec.floors = Math.max(1, coerceInt(el.value, 1));
-      el.value = String(rec.floors);
-    }
-
-    preview();
-
-    // reattach listeners continuously
-    requestAnimationFrame(() => {
-      const modalBody = document.getElementById("modalBody");
-      if (modalBody) {
-        modalBody.addEventListener("input", onFacilityTableInput, { once: true });
-        modalBody.addEventListener("change", onFacilityTableInput, { once: true });
-      }
-    });
   }
 
   // ---------- Events ----------
@@ -353,28 +360,68 @@
 
     // BIM toggle: defer re-render to prevent stuck toggle
     $("bimRequired").onchange = e => {
-      const value = e.target.checked;
-      state.bimRequired = value;
+      state.bimRequired = !!e.target.checked;
       requestAnimationFrame(() => {
         renderInputs();
         preview();
       });
     };
 
-    $("archFacilityCount").oninput = e => {
-      state.general.architecture.facilityCount = coerceInt(e.target.value, 0);
-      normalizeFacilities(state.general.architecture);
-      preview();
-    };
-    $("strFacilityCount").oninput = e => {
-      state.general.structure.facilityCount = coerceInt(e.target.value, 0);
-      normalizeFacilities(state.general.structure);
-      preview();
+    // Architecture enable/disable
+    $("archEnabled").onchange = e => {
+      state.general.architecture.enabled = !!e.target.checked;
+      requestAnimationFrame(() => {
+        renderInputs();
+        preview();
+      });
     };
 
-    $("archEditBtn").onclick = () => buildFacilityTableHtml("Architecture — Facilities Table", "architecture");
-    $("strEditBtn").onclick = () => buildFacilityTableHtml("Structure — Facilities Table", "structure");
+    // Structure enable/disable
+    $("strEnabled").onchange = e => {
+      state.general.structure.enabled = !!e.target.checked;
+      requestAnimationFrame(() => {
+        renderInputs();
+        preview();
+      });
+    };
 
+    // Facility counts
+    const archCountEl = $("archFacilityCount");
+    if (archCountEl) {
+      archCountEl.oninput = e => {
+        state.general.architecture.facilityCount = coerceInt(e.target.value, 0);
+        normalizeFacilities(state.general.architecture);
+        preview();
+      };
+    }
+
+    const strCountEl = $("strFacilityCount");
+    if (strCountEl) {
+      strCountEl.oninput = e => {
+        state.general.structure.facilityCount = coerceInt(e.target.value, 0);
+        normalizeFacilities(state.general.structure);
+        preview();
+      };
+    }
+
+    // Edit tables (only if enabled)
+    const archEditBtn = $("archEditBtn");
+    if (archEditBtn) {
+      archEditBtn.onclick = () => {
+        if (!state.general.architecture.enabled) return;
+        buildFacilityTableHtml("Architecture — Facilities Table", "architecture");
+      };
+    }
+
+    const strEditBtn = $("strEditBtn");
+    if (strEditBtn) {
+      strEditBtn.onclick = () => {
+        if (!state.general.structure.enabled) return;
+        buildFacilityTableHtml("Structure — Facilities Table", "structure");
+      };
+    }
+
+    // Checkbox delegation for Required/Wet/Dry/MEP/Landscape
     $("inputs").onchange = e => {
       const el = e.target;
       if (!(el instanceof HTMLInputElement)) return;
@@ -382,6 +429,9 @@
 
       const kind = el.dataset.kind;
       const id = el.dataset.id;
+
+      // Not delegated controls (Enable toggles handled above)
+      if (!kind || !id) return;
 
       if (kind === "required") {
         state.requiredDetails[id] = el.checked;
