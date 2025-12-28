@@ -2,59 +2,60 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Design Cost Estimator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8" />
+  <title>Consultant Design Cost Estimator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <header class="header">
-    <div class="container">
-      <h1 class="title">Consultant Design Cost Estimator</h1>
-      <div class="subtitle">Prototype • Currency fixed to <span class="badge">$</span></div>
-    </div>
-  </header>
+<header class="header">
+  <div class="container">
+    <h1 class="title">Consultant Design Cost Estimator</h1>
+    <div class="subtitle">Prototype • Currency fixed to <span class="badge">$</span></div>
+  </div>
+</header>
 
-  <main class="container">
-    <div class="layout">
-      <section class="card">
-        <h2 class="cardTitle">Project Data Input</h2>
-        <div id="inputs"></div>
+<main class="container">
+  <div class="layout">
+    <section class="card">
+      <h2 class="cardTitle">Project Data Input</h2>
+      <div id="inputs"></div>
 
-        <div class="actions">
-          <button id="calcBtn" type="button">Preview Inputs</button>
-          <button id="resetBtn" type="button" class="secondary">Reset</button>
+      <div class="actions">
+        <button id="calcBtn" type="button">Preview Inputs</button>
+        <button id="resetBtn" type="button" class="secondary">Reset</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="cardTitle">Live Preview</h2>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpiLabel">Currency</div>
+          <div class="kpiValue" id="currencyOut">$</div>
         </div>
-      </section>
-
-      <section class="card">
-        <h2 class="cardTitle">Live Preview</h2>
-        <div class="kpis">
-          <div class="kpi">
-            <div class="kpiLabel">Currency</div>
-            <div class="kpiValue" id="currencyOut">$</div>
-          </div>
-          <div class="kpi">
-            <div class="kpiLabel">Project</div>
-            <div class="kpiValue" id="projectOut">—</div>
-          </div>
+        <div class="kpi">
+          <div class="kpiLabel">Project</div>
+          <div class="kpiValue" id="projectOut">—</div>
         </div>
+      </div>
 
-        <div class="divider"></div>
+      <div class="divider"></div>
 
-        <div class="smallLabel">Captured Inputs (JSON)</div>
-        <pre class="codebox" id="jsonOut">{}</pre>
-      </section>
-    </div>
-  </main>
+      <div class="smallLabel">Captured Inputs (JSON)</div>
+      <pre class="codebox" id="jsonOut">{}</pre>
+    </section>
+  </div>
+</main>
 
-  <footer class="footer">
-    <div class="container">© 2025 • Design Cost Estimator</div>
-  </footer>
+<footer class="footer">
+  <div class="container">© 2025 • Design Cost Estimator</div>
+</footer>
 
-  <script src="js/config.js"></script>
-  <script src="js/calculator.js"></script>
-  <script src="js/ui.js"></script>
+<script src="js/config.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>
