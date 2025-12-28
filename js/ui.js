@@ -27,9 +27,7 @@
     const close = () => hideModal();
     document.getElementById("modalCloseBtn").addEventListener("click", close);
     document.getElementById("modalCancelBtn").addEventListener("click", close);
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) close();
-    });
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !overlay.classList.contains("hidden")) close();
     });
@@ -63,6 +61,16 @@
     return Number.isFinite(n) ? n : fallback;
   }
 
+  function anyTrue(mapObj) {
+    if (!mapObj) return false;
+    return Object.values(mapObj).some(v => v === true);
+  }
+
+  function listTrueKeys(mapObj) {
+    if (!mapObj) return [];
+    return Object.entries(mapObj).filter(([, v]) => v === true).map(([k]) => k);
+  }
+
   function ensureMaps() {
     if (!state.disciplines) state.disciplines = { wet: {}, dry: {} };
     if (!state.disciplines.wet) state.disciplines.wet = {};
@@ -70,11 +78,8 @@
 
     if (!state.general) state.general = JSON.parse(JSON.stringify(window.DEFAULT_STATE.general));
 
-    if (!state.general.architecture) state.general.architecture = { enabled: false, facilityCount: 0, facilities: [] };
-    if (state.general.architecture.enabled === undefined) state.general.architecture.enabled = false;
-
-    if (!state.general.structure) state.general.structure = { enabled: false, facilityCount: 0, facilities: [] };
-    if (state.general.structure.enabled === undefined) state.general.structure.enabled = false;
+    if (!state.general.architecture) state.general.architecture = { facilityCount: 0, facilities: [] };
+    if (!state.general.structure) state.general.structure = { facilityCount: 0, facilities: [] };
 
     if (!state.general.mep) state.general.mep = { systems: {} };
     if (!state.general.mep.systems) state.general.mep.systems = {};
@@ -84,25 +89,19 @@
   }
 
   function normalizeFacilities(block) {
-    const enabled = !!block.enabled;
     const count = Math.max(0, coerceInt(block.facilityCount, 0));
     block.facilityCount = count;
 
     if (!Array.isArray(block.facilities)) block.facilities = [];
     const arr = block.facilities;
 
-    // keep facilities array length aligned even if disabled (so data isn't lost)
     if (arr.length > count) arr.length = count;
     while (arr.length < count) arr.push({ area: "", floors: 1 });
 
     for (const f of arr) {
-      const floors = coerceInt(f.floors, 1);
-      f.floors = Math.max(1, floors);
-      if (f.area === undefined || f.area === null) f.area = "";
+      f.area = (f.area === undefined || f.area === null) ? "" : f.area;
+      f.floors = Math.max(1, coerceInt(f.floors, 1));
     }
-
-    // if disabled, we still keep the data, but UI will be disabled.
-    return enabled;
   }
 
   // ---------- Facility Table Modal ----------
@@ -122,10 +121,7 @@
     }).join("");
 
     const body = `
-      <div class="smallNote">
-        Total Facilities: <b>${block.facilityCount}</b>
-      </div>
-
+      <div class="smallNote">Total Facilities: <b>${block.facilityCount}</b></div>
       <div class="tableWrap">
         <table class="tTable">
           <thead>
@@ -176,6 +172,155 @@
     preview();
   }
 
+  // ---------- Team Structure ----------
+  function buildTeamStructure() {
+    const duration = Math.max(0, coerceInt(state.durationMonths, 0));
+
+    // juniors per activated sub-item/network (simple duration-based rule)
+    // 1 junior for <=6 months, 2 juniors for 7-12, 3 juniors for 13-18, etc.
+    const juniorsPerItem = Math.max(1, Math.ceil(duration / 6));
+
+    const wetActiveItems = listTrueKeys(state.disciplines.wet);
+    const dryActiveItems = listTrueKeys(state.disciplines.dry);
+
+    const mepActiveItems = listTrueKeys(state.general.mep.systems);
+    const landscapeActiveItems = listTrueKeys(state.general.landscape.items);
+
+    const archActive = coerceInt(state.general.architecture.facilityCount, 0) > 0;
+    const strActive = coerceInt(state.general.structure.facilityCount, 0) > 0;
+
+    const seniors = [];
+    const juniors = [];
+
+    // main roles (always)
+    seniors.push({ role: "Project Manager", count: 1 });
+    seniors.push({ role: "Project Coordinator", count: 1 });
+
+    // BIM manager if BIM required
+    if (state.bimRequired) seniors.push({ role: "BIM Manager", count: 1 });
+
+    // seniors per discipline (if any activated)
+    if (wetActiveItems.length > 0) seniors.push({ role: "Senior – Wet Utilities", count: 1 });
+    if (dryActiveItems.length > 0) seniors.push({ role: "Senior – Dry Utilities", count: 1 });
+    if (mepActiveItems.length > 0) seniors.push({ role: "Senior – MEP", count: 1 });
+    if (landscapeActiveItems.length > 0) seniors.push({ role: "Senior – Landscape", count: 1 });
+    if (archActive) seniors.push({ role: "Senior – Architecture", count: 1 });
+    if (strActive) seniors.push({ role: "Senior – Structure", count: 1 });
+
+    // juniors per activated sub-item/network
+    // Wet/Dry: each activated network adds juniors
+    for (const name of wetActiveItems) {
+      juniors.push({ role: `Junior – Wet Utilities (${name})`, count: juniorsPerItem });
+    }
+    for (const name of dryActiveItems) {
+      juniors.push({ role: `Junior – Dry Utilities (${name})`, count: juniorsPerItem });
+    }
+
+    // MEP: each activated system adds juniors
+    for (const sys of mepActiveItems) {
+      juniors.push({ role: `Junior – MEP (${sys})`, count: juniorsPerItem });
+    }
+
+    // Landscape: each activated item adds juniors
+    for (const it of landscapeActiveItems) {
+      juniors.push({ role: `Junior – Landscape (${it})`, count: juniorsPerItem });
+    }
+
+    // Arch/Str: if activated, add juniors based on facility count
+    if (archActive) {
+      const fac = Math.max(1, coerceInt(state.general.architecture.facilityCount, 1));
+      juniors.push({ role: "Junior – Architecture (Facilities)", count: Math.max(1, Math.ceil(fac / 2)) * juniorsPerItem });
+    }
+    if (strActive) {
+      const fac = Math.max(1, coerceInt(state.general.structure.facilityCount, 1));
+      juniors.push({ role: "Junior – Structure (Facilities)", count: Math.max(1, Math.ceil(fac / 2)) * juniorsPerItem });
+    }
+
+    // totals
+    const totalSeniors = seniors.reduce((a, r) => a + r.count, 0);
+    const totalJuniors = juniors.reduce((a, r) => a + r.count, 0);
+
+    return {
+      durationMonths: duration,
+      juniorsPerActivatedItem: juniorsPerItem,
+      seniors,
+      juniors,
+      totals: {
+        seniors: totalSeniors,
+        juniors: totalJuniors,
+        totalTeam: totalSeniors + totalJuniors
+      }
+    };
+  }
+
+  function renderTeamStructure(team) {
+    const lines = [];
+
+    lines.push(`
+      <div class="smallNote">
+        Rule: Juniors per activated sub-item/network = <b>${team.juniorsPerActivatedItem}</b> (based on duration).
+      </div>
+    `);
+
+    const row = (r) => `
+      <tr>
+        <td>${escapeAttr(r.role)}</td>
+        <td class="tCenter"><b>${r.count}</b></td>
+      </tr>
+    `;
+
+    lines.push(`
+      <div class="tableWrap" style="margin-top:10px;">
+        <table class="tTable">
+          <thead>
+            <tr><th colspan="2">Main Roles / Seniors</th></tr>
+            <tr>
+              <th>Role</th>
+              <th style="width:90px;" class="tCenter">Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${team.seniors.map(row).join("")}
+          </tbody>
+        </table>
+      </div>
+    `);
+
+    lines.push(`
+      <div class="tableWrap" style="margin-top:12px;">
+        <table class="tTable">
+          <thead>
+            <tr><th colspan="2">Juniors (Per Activated Sub-Item/Network)</th></tr>
+            <tr>
+              <th>Role</th>
+              <th style="width:90px;" class="tCenter">Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${team.juniors.length ? team.juniors.map(row).join("") : `<tr><td colspan="2" class="tCenter muted">No activated sub-items yet</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `);
+
+    lines.push(`
+      <div class="tableWrap" style="margin-top:12px;">
+        <table class="tTable">
+          <thead>
+            <tr><th colspan="2">Totals</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Total Seniors</td><td class="tCenter"><b>${team.totals.seniors}</b></td></tr>
+            <tr><td>Total Juniors</td><td class="tCenter"><b>${team.totals.juniors}</b></td></tr>
+            <tr><td>Total Team</td><td class="tCenter"><b>${team.totals.totalTeam}</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    `);
+
+    $("teamOut").innerHTML = lines.join("");
+  }
+
   // ---------- Rendering ----------
   function renderInputs() {
     ensureMaps();
@@ -198,9 +343,6 @@
         </label>
       `;
     }).join("");
-
-    // Rearranged order AFTER Required Detail:
-    // Wet|Dry -> MEP -> Landscape -> Arch -> Struc
 
     const wetHtml = window.APP_CONFIG.disciplines.wet.map(name => {
       const checked = state.disciplines.wet?.[name] ? "checked" : "";
@@ -242,12 +384,8 @@
       `;
     }).join("");
 
-    const arch = state.general.architecture;
-    const str = state.general.structure;
-
-    const archDisabled = arch.enabled ? "" : "disabled";
-    const strDisabled = str.enabled ? "" : "disabled";
-
+    // Rearranged order after Required Detail:
+    // Wet | Dry -> MEP -> Landscape -> Arch -> Struc
     $("inputs").innerHTML = `
       <div class="field">
         <label>Project Name</label>
@@ -309,41 +447,29 @@
       <div class="groupTitle"><h3>Landscape</h3></div>
       <div class="checkGrid">${landscapeHtml}</div>
 
-      <div class="groupTitle">
-        <h3>Architecture</h3>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
-          <input type="checkbox" id="archEnabled" ${arch.enabled ? "checked" : ""}>
-          Enable
-        </label>
-      </div>
+      <div class="groupTitle"><h3>Architecture</h3></div>
       <div class="row">
         <div class="field">
           <label>No. of Facilities</label>
-          <input id="archFacilityCount" type="number" min="0" step="1" value="${escapeAttr(arch.facilityCount ?? 0)}" ${archDisabled}>
+          <input id="archFacilityCount" type="number" min="0" step="1" value="${escapeAttr(state.general.architecture.facilityCount ?? 0)}">
           <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
         </div>
         <div class="field">
           <label>&nbsp;</label>
-          <button type="button" class="fullWidth" id="archEditBtn" ${archDisabled}>Edit Table</button>
+          <button type="button" class="fullWidth" id="archEditBtn">Edit Table</button>
         </div>
       </div>
 
-      <div class="groupTitle">
-        <h3>Structure</h3>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
-          <input type="checkbox" id="strEnabled" ${str.enabled ? "checked" : ""}>
-          Enable
-        </label>
-      </div>
+      <div class="groupTitle"><h3>Structure</h3></div>
       <div class="row">
         <div class="field">
           <label>No. of Facilities</label>
-          <input id="strFacilityCount" type="number" min="0" step="1" value="${escapeAttr(str.facilityCount ?? 0)}" ${strDisabled}>
+          <input id="strFacilityCount" type="number" min="0" step="1" value="${escapeAttr(state.general.structure.facilityCount ?? 0)}">
           <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
         </div>
         <div class="field">
           <label>&nbsp;</label>
-          <button type="button" class="fullWidth" id="strEditBtn" ${strDisabled}>Edit Table</button>
+          <button type="button" class="fullWidth" id="strEditBtn">Edit Table</button>
         </div>
       </div>
     `;
@@ -358,7 +484,7 @@
     $("durationMonths").oninput = e => { state.durationMonths = e.target.value; preview(); };
     $("drawingScale").onchange = e => { state.drawingScale = e.target.value; preview(); };
 
-    // BIM toggle: defer re-render to prevent stuck toggle
+    // BIM toggle (defer re-render to avoid stuck toggle)
     $("bimRequired").onchange = e => {
       state.bimRequired = !!e.target.checked;
       requestAnimationFrame(() => {
@@ -367,61 +493,23 @@
       });
     };
 
-    // Architecture enable/disable
-    $("archEnabled").onchange = e => {
-      state.general.architecture.enabled = !!e.target.checked;
-      requestAnimationFrame(() => {
-        renderInputs();
-        preview();
-      });
+    // Facilities count
+    $("archFacilityCount").oninput = e => {
+      state.general.architecture.facilityCount = coerceInt(e.target.value, 0);
+      normalizeFacilities(state.general.architecture);
+      preview();
+    };
+    $("strFacilityCount").oninput = e => {
+      state.general.structure.facilityCount = coerceInt(e.target.value, 0);
+      normalizeFacilities(state.general.structure);
+      preview();
     };
 
-    // Structure enable/disable
-    $("strEnabled").onchange = e => {
-      state.general.structure.enabled = !!e.target.checked;
-      requestAnimationFrame(() => {
-        renderInputs();
-        preview();
-      });
-    };
+    // Edit tables
+    $("archEditBtn").onclick = () => buildFacilityTableHtml("Architecture — Facilities Table", "architecture");
+    $("strEditBtn").onclick = () => buildFacilityTableHtml("Structure — Facilities Table", "structure");
 
-    // Facility counts
-    const archCountEl = $("archFacilityCount");
-    if (archCountEl) {
-      archCountEl.oninput = e => {
-        state.general.architecture.facilityCount = coerceInt(e.target.value, 0);
-        normalizeFacilities(state.general.architecture);
-        preview();
-      };
-    }
-
-    const strCountEl = $("strFacilityCount");
-    if (strCountEl) {
-      strCountEl.oninput = e => {
-        state.general.structure.facilityCount = coerceInt(e.target.value, 0);
-        normalizeFacilities(state.general.structure);
-        preview();
-      };
-    }
-
-    // Edit tables (only if enabled)
-    const archEditBtn = $("archEditBtn");
-    if (archEditBtn) {
-      archEditBtn.onclick = () => {
-        if (!state.general.architecture.enabled) return;
-        buildFacilityTableHtml("Architecture — Facilities Table", "architecture");
-      };
-    }
-
-    const strEditBtn = $("strEditBtn");
-    if (strEditBtn) {
-      strEditBtn.onclick = () => {
-        if (!state.general.structure.enabled) return;
-        buildFacilityTableHtml("Structure — Facilities Table", "structure");
-      };
-    }
-
-    // Checkbox delegation for Required/Wet/Dry/MEP/Landscape
+    // Checkbox delegation
     $("inputs").onchange = e => {
       const el = e.target;
       if (!(el instanceof HTMLInputElement)) return;
@@ -429,8 +517,6 @@
 
       const kind = el.dataset.kind;
       const id = el.dataset.id;
-
-      // Not delegated controls (Enable toggles handled above)
       if (!kind || !id) return;
 
       if (kind === "required") {
@@ -440,7 +526,6 @@
       }
 
       if (kind === "wet" || kind === "dry") {
-        if (!state.disciplines[kind]) state.disciplines[kind] = {};
         state.disciplines[kind][id] = el.checked;
         preview();
         return;
@@ -468,7 +553,19 @@
 
     if (projectOut) projectOut.textContent = state.projectName || "—";
     if (durationOut) durationOut.textContent = state.durationMonths || "—";
-    if (jsonOut) jsonOut.textContent = JSON.stringify(state, null, 2);
+
+    const team = buildTeamStructure();
+    renderTeamStructure(team);
+
+    // include computed output into JSON for future pricing engine
+    const payload = {
+      ...state,
+      output: {
+        teamStructure: team
+      }
+    };
+
+    if (jsonOut) jsonOut.textContent = JSON.stringify(payload, null, 2);
   }
 
   document.addEventListener("DOMContentLoaded", () => {
