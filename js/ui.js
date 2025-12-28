@@ -1,12 +1,12 @@
 // File: js/ui.js
 (function () {
   const $ = (id) => document.getElementById(id);
-  let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  let state = JSON.parse(JSON.stringify(window.DEFAULT_STATE));
 
   function renderInputs() {
     const requiredList = state.bimRequired
-      ? APP_CONFIG.requiredDetailBim
-      : APP_CONFIG.requiredDetailNonBim;
+      ? window.APP_CONFIG.requiredDetailBim
+      : window.APP_CONFIG.requiredDetailNonBim;
 
     const requiredHtml = requiredList.map(item => {
       const checked = state.requiredDetails[item.id] ? "checked" : "";
@@ -24,7 +24,7 @@
     const renderGroup = (group, title) => `
       <div class="groupTitle"><h3>${title}</h3></div>
       <div class="checkGrid">
-        ${APP_CONFIG.disciplines[group].map(d => {
+        ${window.APP_CONFIG.disciplines[group].map(d => {
           const checked = state.disciplines[group]?.[d] ? "checked" : "";
           return `
             <label class="checkItem">
@@ -39,17 +39,17 @@
     $("inputs").innerHTML = `
       <div class="field">
         <label>Project Name</label>
-        <input id="projectName" type="text" value="${state.projectName}">
+        <input id="projectName" type="text" value="${escapeAttr(state.projectName)}">
       </div>
 
       <div class="row">
         <div class="field">
           <label>Project Area (sq.m)</label>
-          <input id="projectAreaSqm" type="number" min="0" value="${state.projectAreaSqm}">
+          <input id="projectAreaSqm" type="number" min="0" value="${escapeAttr(state.projectAreaSqm)}">
         </div>
         <div class="field">
           <label>Required Duration (Months)</label>
-          <input id="durationMonths" type="number" min="1" value="${state.durationMonths}">
+          <input id="durationMonths" type="number" min="1" value="${escapeAttr(state.durationMonths)}">
         </div>
       </div>
 
@@ -57,8 +57,8 @@
         <div class="field">
           <label>Desired Drawing Scale</label>
           <select id="drawingScale">
-            ${APP_CONFIG.drawingScales.map(s =>
-              `<option value="${s}" ${state.drawingScale === s ? "selected" : ""}>${s}</option>`
+            ${window.APP_CONFIG.drawingScales.map(s =>
+              `<option value="${escapeAttr(s)}" ${state.drawingScale === s ? "selected" : ""}>${s}</option>`
             ).join("")}
           </select>
         </div>
@@ -109,14 +109,20 @@
       preview();
     };
 
+    // ✅ FIX: defer re-render to next tick to avoid "stuck ON" behavior
     $("bimRequired").onchange = e => {
-      state.bimRequired = e.target.checked;
-      renderInputs(); // re-render safely with preserved state
-      preview();
+      const value = e.target.checked;
+      state.bimRequired = value;
+
+      requestAnimationFrame(() => {
+        renderInputs();
+        preview();
+      });
     };
 
     $("inputs").onchange = e => {
       const el = e.target;
+      if (!(el instanceof HTMLInputElement)) return;
       if (el.type !== "checkbox") return;
 
       const group = el.dataset.kind;
@@ -134,9 +140,24 @@
   }
 
   function preview() {
-    $("projectOut").textContent = state.projectName || "—";
-    $("durationOut").textContent = state.durationMonths || "—";
-    $("jsonOut").textContent = JSON.stringify(state, null, 2);
+    const projectOut = $("projectOut");
+    const durationOut = $("durationOut");
+    const jsonOut = $("jsonOut");
+
+    if (projectOut) projectOut.textContent = state.projectName || "—";
+    if (durationOut) durationOut.textContent = state.durationMonths || "—";
+    if (jsonOut) jsonOut.textContent = JSON.stringify(state, null, 2);
+  }
+
+  // Minimal safe escaping for attribute values
+  function escapeAttr(v) {
+    const s = String(v ?? "");
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
