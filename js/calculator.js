@@ -1,19 +1,18 @@
 // File: js/calculator.js
-// For now: no pricing logic. Just validate + normalize inputs.
 function buildInputPayload(state) {
   const area = Number(state.projectAreaSqm);
   const projectAreaSqm = Number.isFinite(area) ? area : 0;
 
   const requiredDetailSelected = Object.entries(state.requiredDetails)
-    .filter(([,v]) => v === true)
+    .filter(([, v]) => v === true)
     .map(([k]) => k);
 
   const wetSelected = Object.entries(state.disciplines.wet)
-    .filter(([,v]) => v === true)
+    .filter(([, v]) => v === true)
     .map(([k]) => k);
 
   const drySelected = Object.entries(state.disciplines.dry)
-    .filter(([,v]) => v === true)
+    .filter(([, v]) => v === true)
     .map(([k]) => k);
 
   return {
@@ -22,9 +21,6 @@ function buildInputPayload(state) {
     projectAreaSqm,
     bimRequired: !!state.bimRequired,
     requiredDetailSelected,
-    disciplines: {
-      wetSelected,
-      drySelected
-    }
+    disciplines: { wetSelected, drySelected }
   };
 }
