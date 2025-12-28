@@ -1,5 +1,4 @@
 // File: js/config.js
-// Currency fixed to USD ($) as per requirement
 const APP_CONFIG = {
   currencySymbol: "$",
   requiredDetailNonBim: [
@@ -47,6 +46,4 @@ const DEFAULT_STATE = {
   },
   disciplines: {
     wet: { pw: false, sew: false, stm: false, irr: false, ff: false },
-    dry: { lv: false, mv: false, hv: false, ica: false, ict: false }
-  }
-};
+    dry: { lv: false, mv: false, hv: false, ica: false, ict: false
