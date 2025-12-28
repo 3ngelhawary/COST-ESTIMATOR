@@ -1,8 +1,14 @@
 // File: js/config.js
 
-// Expose config globally (required for GitHub Pages runtime)
 window.APP_CONFIG = {
   currencySymbol: "$",
+
+  drawingScales: [
+    "1:1000",
+    "1:500",
+    "1:250",
+    "1:100"
+  ],
 
   requiredDetailNonBim: [
     { id: "concept", label: "Concept Design" },
@@ -21,19 +27,14 @@ window.APP_CONFIG = {
   ],
 
   disciplines: {
-    wet: [
-      { id: "pw", label: "Potable Water" },
-      { id: "sew", label: "Sewage" },
-      { id: "stm", label: "Storm" },
-      { id: "irr", label: "Irrigation" },
-      { id: "ff", label: "Fire Fighting" }
-    ],
-    dry: [
-      { id: "lv", label: "Low Voltage" },
-      { id: "mv", label: "Medium Voltage" },
-      { id: "hv", label: "High Voltage" },
-      { id: "ica", label: "ICA" },
-      { id: "ict", label: "ICT" }
+    wet: ["Potable Water", "Sewage", "Storm", "Irrigation", "Fire Fighting"],
+    dry: ["Low Voltage", "Medium Voltage", "High Voltage", "ICA", "ICT"],
+    general: [
+      "Architecture",
+      "Structure",
+      "Roads",
+      "Landscape",
+      "MEP"
     ]
   }
 };
@@ -41,6 +42,8 @@ window.APP_CONFIG = {
 window.DEFAULT_STATE = {
   projectName: "",
   projectAreaSqm: "",
+  durationMonths: "",
+  drawingScale: "1:500",
   bimRequired: false,
 
   requiredDetails: {
@@ -52,7 +55,8 @@ window.DEFAULT_STATE = {
   },
 
   disciplines: {
-    wet: { pw: false, sew: false, stm: false, irr: false, ff: false },
-    dry: { lv: false, mv: false, hv: false, ica: false, ict: false }
+    wet: {},
+    dry: {},
+    general: {}
   }
 };
