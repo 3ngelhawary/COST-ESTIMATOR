@@ -3,12 +3,7 @@
 window.APP_CONFIG = {
   currencySymbol: "$",
 
-  drawingScales: [
-    "1:1000",
-    "1:500",
-    "1:250",
-    "1:100"
-  ],
+  drawingScales: ["1:1000", "1:500", "1:250", "1:100"],
 
   requiredDetailNonBim: [
     { id: "concept", label: "Concept Design" },
@@ -28,15 +23,27 @@ window.APP_CONFIG = {
 
   disciplines: {
     wet: ["Potable Water", "Sewage", "Storm", "Irrigation", "Fire Fighting"],
-    dry: ["Low Voltage", "Medium Voltage", "High Voltage", "ICA", "ICT"],
-    general: [
-      "Architecture",
-      "Structure",
-      "Roads",
-      "Landscape",
-      "MEP"
-    ]
-  }
+    dry: ["Low Voltage", "Medium Voltage", "High Voltage", "ICA", "ICT"]
+  },
+
+  mepSystems: [
+    "Lighting",
+    "HVAC",
+    "Chiller",
+    "Plumbing",
+    "Firefighting",
+    "Power",
+    "Data cabling",
+    "CCTV",
+    "Telephone",
+    "BMS"
+  ],
+
+  landscapeItems: [
+    "Master Planning",
+    "Secondary Irrigation",
+    "Usb-Soil Drainage"
+  ]
 };
 
 window.DEFAULT_STATE = {
@@ -54,9 +61,27 @@ window.DEFAULT_STATE = {
     asbuilt: false
   },
 
+  // Wet/Dry utilities (existing)
   disciplines: {
     wet: {},
-    dry: {},
-    general: {}
+    dry: {}
+  },
+
+  // New: detailed General Disciplines
+  general: {
+    architecture: {
+      facilityCount: 0,
+      facilities: [] // [{ area: "", floors: 1 }]
+    },
+    structure: {
+      facilityCount: 0,
+      facilities: []
+    },
+    mep: {
+      systems: {} // { "Lighting": true/false, ... }
+    },
+    landscape: {
+      items: {} // { "Master Planning": true/false, ... }
+    }
   }
 };
