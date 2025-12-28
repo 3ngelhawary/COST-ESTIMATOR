@@ -1,19 +1,30 @@
-function calculateDesignFee(input) {
-  const {
-    baseFee,
-    projectType,
-    stage,
-    complexity
-  } = input;
+// File: js/calculator.js
+// For now: no pricing logic. Just validate + normalize inputs.
+function buildInputPayload(state) {
+  const area = Number(state.projectAreaSqm);
+  const projectAreaSqm = Number.isFinite(area) ? area : 0;
 
-  return baseFee *
-    MULTIPLIERS.projectType[projectType] *
-    MULTIPLIERS.stage[stage] *
-    MULTIPLIERS.complexity[complexity];
-}
+  const requiredDetailSelected = Object.entries(state.requiredDetails)
+    .filter(([,v]) => v === true)
+    .map(([k]) => k);
 
-function calculateTotal(designFee, overheadPct, profitPct, expenses) {
-  const overhead = designFee * overheadPct / 100;
-  const profit = (designFee + overhead) * profitPct / 100;
-  return designFee + overhead + profit + expenses;
+  const wetSelected = Object.entries(state.disciplines.wet)
+    .filter(([,v]) => v === true)
+    .map(([k]) => k);
+
+  const drySelected = Object.entries(state.disciplines.dry)
+    .filter(([,v]) => v === true)
+    .map(([k]) => k);
+
+  return {
+    currency: APP_CONFIG.currencySymbol,
+    projectName: (state.projectName || "").trim(),
+    projectAreaSqm,
+    bimRequired: !!state.bimRequired,
+    requiredDetailSelected,
+    disciplines: {
+      wetSelected,
+      drySelected
+    }
+  };
 }
