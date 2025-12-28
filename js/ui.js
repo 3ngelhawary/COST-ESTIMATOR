@@ -1,47 +1,58 @@
 // File: js/ui.js
-(function(){
+(function () {
   const $ = (id) => document.getElementById(id);
-
   let state = structuredClone(DEFAULT_STATE);
 
-  function renderInputs(){
+  function escapeHtml(str) {
+    return (str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderInputs() {
     const requiredList = state.bimRequired
       ? APP_CONFIG.requiredDetailBim
       : APP_CONFIG.requiredDetailNonBim;
 
-    const requiredHtml = requiredList.map(item => {
-      const checked = state.requiredDetails[item.id] ? "checked" : "";
-      const sub = item.sub ? `<div class="sub">${item.sub}</div>` : "";
-      return `
-        <label class="checkItem">
-          <input type="checkbox" data-kind="required" data-id="${item.id}" ${checked}>
-          <div>
-            <div class="txt">${item.label}</div>
-            ${sub}
-          </div>
-        </label>
-      `;
-    }).join("");
+    const requiredHtml = requiredList
+      .map((item) => {
+        const checked = state.requiredDetails[item.id] ? "checked" : "";
+        const sub = item.sub ? `<div class="sub">${item.sub}</div>` : "";
+        return `
+          <label class="checkItem">
+            <input type="checkbox" data-kind="required" data-id="${item.id}" ${checked}>
+            <div>
+              <div class="txt">${item.label}</div>
+              ${sub}
+            </div>
+          </label>`;
+      })
+      .join("");
 
-    const wetHtml = APP_CONFIG.disciplines.wet.map(item => {
-      const checked = state.disciplines.wet[item.id] ? "checked" : "";
-      return `
-        <label class="checkItem">
-          <input type="checkbox" data-kind="wet" data-id="${item.id}" ${checked}>
-          <div><div class="txt">${item.label}</div></div>
-        </label>
-      `;
-    }).join("");
+    const wetHtml = APP_CONFIG.disciplines.wet
+      .map((item) => {
+        const checked = state.disciplines.wet[item.id] ? "checked" : "";
+        return `
+          <label class="checkItem">
+            <input type="checkbox" data-kind="wet" data-id="${item.id}" ${checked}>
+            <div><div class="txt">${item.label}</div></div>
+          </label>`;
+      })
+      .join("");
 
-    const dryHtml = APP_CONFIG.disciplines.dry.map(item => {
-      const checked = state.disciplines.dry[item.id] ? "checked" : "";
-      return `
-        <label class="checkItem">
-          <input type="checkbox" data-kind="dry" data-id="${item.id}" ${checked}>
-          <div><div class="txt">${item.label}</div></div>
-        </label>
-      `;
-    }).join("");
+    const dryHtml = APP_CONFIG.disciplines.dry
+      .map((item) => {
+        const checked = state.disciplines.dry[item.id] ? "checked" : "";
+        return `
+          <label class="checkItem">
+            <input type="checkbox" data-kind="dry" data-id="${item.id}" ${checked}>
+            <div><div class="txt">${item.label}</div></div>
+          </label>`;
+      })
+      .join("");
 
     $("inputs").innerHTML = `
       <div class="row">
@@ -62,7 +73,7 @@
           <div class="s">OFF → Design checklist • ON → LOD checklist</div>
         </div>
         <label class="switch" title="Toggle BIM Required">
-          <input id="bimRequired" type="checkbox" ${state.bimRequired ? "checked":""}>
+          <input id="bimRequired" type="checkbox" ${state.bimRequired ? "checked" : ""}>
           <span class="slider"></span>
         </label>
       </div>
@@ -71,7 +82,7 @@
         <h3>Required Detail</h3>
         <span class="pill">${state.bimRequired ? "LOD Mode" : "Design Mode"}</span>
       </div>
-      <div class="checkGrid" id="requiredGrid">
+      <div class="checkGrid">
         ${requiredHtml}
       </div>
 
@@ -94,27 +105,26 @@
       </div>
     `;
 
-    wireEvents();
+    wireInputEvents();
   }
 
-  function wireEvents(){
+  function wireInputEvents() {
     $("projectName").addEventListener("input", (e) => {
       state.projectName = e.target.value;
-      autoPreview();
+      preview();
     });
 
     $("projectAreaSqm").addEventListener("input", (e) => {
       state.projectAreaSqm = e.target.value;
-      autoPreview();
+      preview();
     });
 
     $("bimRequired").addEventListener("change", (e) => {
       state.bimRequired = !!e.target.checked;
-      renderInputs(); // re-render required list labels
-      autoPreview();
+      renderInputs();
+      preview();
     });
 
-    // event delegation for checkboxes
     $("inputs").addEventListener("change", (e) => {
       const el = e.target;
       if (!(el instanceof HTMLInputElement)) return;
@@ -128,39 +138,28 @@
       if (kind === "wet") state.disciplines.wet[id] = el.checked;
       if (kind === "dry") state.disciplines.dry[id] = el.checked;
 
-      autoPreview();
+      preview();
     });
   }
 
-  function autoPreview(){
-    // keep preview always updated
+  function preview() {
     const payload = buildInputPayload(state);
     $("currencyOut").textContent = APP_CONFIG.currencySymbol;
     $("projectOut").textContent = payload.projectName ? payload.projectName : "—";
     $("jsonOut").textContent = JSON.stringify(payload, null, 2);
   }
 
-  function resetAll(){
+  function resetAll() {
     state = structuredClone(DEFAULT_STATE);
     renderInputs();
-    autoPreview();
+    preview();
   }
 
-  function escapeHtml(str){
-    return (str ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  // top buttons
   document.addEventListener("DOMContentLoaded", () => {
     renderInputs();
-    autoPreview();
+    preview();
 
-    $("calcBtn").addEventListener("click", autoPreview);
+    $("calcBtn").addEventListener("click", preview);
     $("resetBtn").addEventListener("click", resetAll);
   });
 })();
