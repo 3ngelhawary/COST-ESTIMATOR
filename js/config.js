@@ -61,19 +61,19 @@ window.DEFAULT_STATE = {
     asbuilt: false
   },
 
-  // Wet/Dry utilities (existing)
   disciplines: {
     wet: {},
     dry: {}
   },
 
-  // New: detailed General Disciplines
   general: {
     architecture: {
+      enabled: false,
       facilityCount: 0,
       facilities: [] // [{ area: "", floors: 1 }]
     },
     structure: {
+      enabled: false,
       facilityCount: 0,
       facilities: []
     },
