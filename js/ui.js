@@ -1,280 +1,428 @@
-/* File: css/style.css */
+// File: js/ui.js
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let state = JSON.parse(JSON.stringify(window.DEFAULT_STATE));
 
-:root{
-  --bg:#0b1020;
-  --card:#121a33;
-  --muted:#9fb0d0;
-  --text:#e8eefc;
-  --line:#243056;
-  --focus:#4f6bff;
-}
+  // ---------- Modal (single, reused) ----------
+  function ensureModal() {
+    if (document.getElementById("modalOverlay")) return;
 
-*{ box-sizing:border-box; }
+    const overlay = document.createElement("div");
+    overlay.id = "modalOverlay";
+    overlay.className = "modalOverlay hidden";
+    overlay.innerHTML = `
+      <div class="modalCard" role="dialog" aria-modal="true">
+        <div class="modalHeader">
+          <div class="modalTitle" id="modalTitle">Edit Facilities</div>
+          <button type="button" class="modalCloseBtn" id="modalCloseBtn">✕</button>
+        </div>
+        <div class="modalBody" id="modalBody"></div>
+        <div class="modalFooter">
+          <button type="button" class="secondary" id="modalCancelBtn">Close</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
 
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  background:linear-gradient(180deg,#070a14,var(--bg));
-  color:var(--text);
-}
+    const close = () => hideModal();
+    document.getElementById("modalCloseBtn").addEventListener("click", close);
+    document.getElementById("modalCancelBtn").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.classList.contains("hidden")) close();
+    });
+  }
 
-.container{ max-width:1200px; margin:0 auto; padding:0 16px; }
+  function showModal(title, bodyHtml) {
+    ensureModal();
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalBody").innerHTML = bodyHtml;
+    document.getElementById("modalOverlay").classList.remove("hidden");
+  }
 
-.header{
-  padding:18px 0;
-  border-bottom:1px solid var(--line);
-  background:rgba(18,26,51,.55);
-  backdrop-filter: blur(6px);
-}
+  function hideModal() {
+    const overlay = document.getElementById("modalOverlay");
+    if (overlay) overlay.classList.add("hidden");
+  }
 
-.title{ margin:0; font-size:22px; text-align:center; }
+  // ---------- Helpers ----------
+  function escapeAttr(v) {
+    const s = String(v ?? "");
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-.layout{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:16px;
-  margin:18px 0 26px;
-}
-@media (max-width: 1100px){ .layout{ grid-template-columns:1fr; } }
+  function coerceInt(v, fallback = 0) {
+    const n = parseInt(String(v ?? ""), 10);
+    return Number.isFinite(n) ? n : fallback;
+  }
 
-.card{
-  background:rgba(18,26,51,.92);
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
-}
+  function normalizeFacilities(block) {
+    const count = Math.max(0, coerceInt(block.facilityCount, 0));
+    block.facilityCount = count;
 
-.cardTitle{ margin:0 0 12px; font-size:16px; color:var(--text); }
+    if (!Array.isArray(block.facilities)) block.facilities = [];
+    const arr = block.facilities;
 
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  margin-bottom:12px;
-}
-@media (max-width: 620px){ .row{ grid-template-columns:1fr; } }
+    if (arr.length > count) {
+      arr.length = count;
+    } else if (arr.length < count) {
+      while (arr.length < count) {
+        arr.push({ area: "", floors: 1 });
+      }
+    }
 
-.field label{
-  display:block;
-  font-size:12px;
-  color:var(--muted);
-  margin:0 0 6px;
-}
+    // enforce floors default >=1
+    for (const f of arr) {
+      const floors = coerceInt(f.floors, 1);
+      f.floors = Math.max(1, floors);
+      if (f.area === undefined || f.area === null) f.area = "";
+    }
+  }
 
-input[type="text"], input[type="number"], select{
-  width:100%;
-  padding:10px 10px;
-  border-radius:10px;
-  border:1px solid #2b3a68;
-  background:#0b1330;
-  color:var(--text);
-  outline:none;
-}
-input:focus, select:focus{ border-color:var(--focus); }
+  function ensureMaps() {
+    // Wet/Dry
+    if (!state.disciplines) state.disciplines = { wet: {}, dry: {} };
+    if (!state.disciplines.wet) state.disciplines.wet = {};
+    if (!state.disciplines.dry) state.disciplines.dry = {};
 
-.smallNote{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:6px;
-  line-height:1.35;
-}
+    // General
+    if (!state.general) state.general = JSON.parse(JSON.stringify(window.DEFAULT_STATE.general));
+    if (!state.general.architecture) state.general.architecture = { facilityCount: 0, facilities: [] };
+    if (!state.general.structure) state.general.structure = { facilityCount: 0, facilities: [] };
+    if (!state.general.mep) state.general.mep = { systems: {} };
+    if (!state.general.mep.systems) state.general.mep.systems = {};
+    if (!state.general.landscape) state.general.landscape = { items: {} };
+    if (!state.general.landscape.items) state.general.landscape.items = {};
+  }
 
-.divider{ height:1px; background:var(--line); margin:12px 0; }
+  // ---------- Rendering ----------
+  function renderInputs() {
+    ensureMaps();
+    normalizeFacilities(state.general.architecture);
+    normalizeFacilities(state.general.structure);
 
-.groupTitle{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin:10px 0 8px;
-}
-.groupTitle h3{ margin:0; font-size:13px; color:var(--text); }
+    const requiredList = state.bimRequired
+      ? window.APP_CONFIG.requiredDetailBim
+      : window.APP_CONFIG.requiredDetailNonBim;
 
-.checkGrid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-@media (max-width: 620px){ .checkGrid{ grid-template-columns:1fr; } }
+    const requiredHtml = requiredList.map(item => {
+      const checked = state.requiredDetails[item.id] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="required" data-id="${item.id}" ${checked}>
+          <div>
+            <div class="txt">${item.label}</div>
+            ${item.sub ? `<div class="sub">${item.sub}</div>` : ""}
+          </div>
+        </label>
+      `;
+    }).join("");
 
-.checkItem{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-  padding:10px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:#0b1330;
-}
-.checkItem input{ margin-top:3px; }
+    const wetHtml = window.APP_CONFIG.disciplines.wet.map(name => {
+      const checked = state.disciplines.wet?.[name] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="wet" data-id="${escapeAttr(name)}" ${checked}>
+          <div class="txt">${escapeAttr(name)}</div>
+        </label>
+      `;
+    }).join("");
 
-/* keep labels on one line */
-.checkItem .txt{
-  font-size:13px;
-  white-space: nowrap;
-}
+    const dryHtml = window.APP_CONFIG.disciplines.dry.map(name => {
+      const checked = state.disciplines.dry?.[name] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="dry" data-id="${escapeAttr(name)}" ${checked}>
+          <div class="txt">${escapeAttr(name)}</div>
+        </label>
+      `;
+    }).join("");
 
-.checkItem .sub{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:2px;
-}
+    const mepHtml = window.APP_CONFIG.mepSystems.map(sys => {
+      const checked = state.general.mep.systems?.[sys] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="mep" data-id="${escapeAttr(sys)}" ${checked}>
+          <div class="txt">${escapeAttr(sys)}</div>
+        </label>
+      `;
+    }).join("");
 
-.toggleRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:#0b1330;
-  padding:10px;
-  margin:10px 0;
-}
-.toggleRow .left{ display:flex; flex-direction:column; gap:2px; }
-.toggleRow .left .t{ font-size:13px; }
-.toggleRow .left .s{ font-size:12px; color:var(--muted); }
+    const landscapeHtml = window.APP_CONFIG.landscapeItems.map(item => {
+      const checked = state.general.landscape.items?.[item] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="landscape" data-id="${escapeAttr(item)}" ${checked}>
+          <div class="txt">${escapeAttr(item)}</div>
+        </label>
+      `;
+    }).join("");
 
-.switch{ position:relative; display:inline-block; width:52px; height:28px; }
-.switch input{ opacity:0; width:0; height:0; }
-.slider{
-  position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
-  background:#1a234a; border:1px solid #2b3a68; border-radius:999px;
-  transition:.2s;
-}
-.slider:before{
-  position:absolute; content:""; height:22px; width:22px; left:3px; top:2px;
-  background:white; border-radius:50%; transition:.2s;
-}
-.switch input:checked + .slider{ border-color:var(--focus); }
-.switch input:checked + .slider:before{ transform:translateX(24px); }
+    const archCount = state.general.architecture.facilityCount ?? 0;
+    const strCount = state.general.structure.facilityCount ?? 0;
 
-button{
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid #2b3a68;
-  background:#17214a;
-  color:var(--text);
-  cursor:pointer;
-}
-button:hover{ border-color:var(--focus); }
-button.secondary{ background:transparent; }
+    $("inputs").innerHTML = `
+      <div class="field">
+        <label>Project Name</label>
+        <input id="projectName" type="text" value="${escapeAttr(state.projectName)}">
+      </div>
 
-.fullWidth{ width:100%; }
+      <div class="row">
+        <div class="field">
+          <label>Project Area (sq.m)</label>
+          <input id="projectAreaSqm" type="number" min="0" value="${escapeAttr(state.projectAreaSqm)}">
+        </div>
+        <div class="field">
+          <label>Required Duration (Months)</label>
+          <input id="durationMonths" type="number" min="1" value="${escapeAttr(state.durationMonths)}">
+        </div>
+      </div>
 
-.kpis{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.kpi{
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:12px;
-  background:#0b1330;
-}
-.kpiLabel{ font-size:12px; color:var(--muted); }
-.kpiValue{ font-size:16px; font-weight:700; margin-top:4px; }
+      <div class="row">
+        <div class="field">
+          <label>Desired Drawing Scale</label>
+          <select id="drawingScale">
+            ${window.APP_CONFIG.drawingScales.map(s =>
+              `<option value="${escapeAttr(s)}" ${state.drawingScale === s ? "selected" : ""}>${s}</option>`
+            ).join("")}
+          </select>
+        </div>
 
-.smallLabel{ font-size:12px; color:var(--muted); margin-bottom:6px; }
-.codebox{
-  margin:0;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:#0b1330;
-  overflow:auto;
-  min-height:240px;
-  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size:12px;
-  color:var(--text);
-}
+        <div class="toggleRow">
+          <div class="left">
+            <div class="t">BIM Required</div>
+            <div class="s">Switch to LOD mode</div>
+          </div>
+          <label class="switch">
+            <input id="bimRequired" type="checkbox" ${state.bimRequired ? "checked" : ""}>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
 
-.footer{
-  padding:18px 0;
-  border-top:1px solid var(--line);
-  color:var(--muted);
-  font-size:12px;
-  text-align:center;
-}
+      <div class="groupTitle"><h3>Required Detail</h3></div>
+      <div class="checkGrid">${requiredHtml}</div>
 
-/* ---------- Modal + Table ---------- */
-.modalOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-  z-index:9999;
-}
-.modalOverlay.hidden{ display:none; }
+      <div class="divider"></div>
 
-.modalCard{
-  width:min(780px, 100%);
-  background:rgba(18,26,51,.98);
-  border:1px solid var(--line);
-  border-radius:14px;
-  box-shadow:0 20px 60px rgba(0,0,0,.45);
-  overflow:hidden;
-}
+      <!-- General Disciplines (detailed) -->
+      <div class="groupTitle"><h3>Architecture</h3></div>
+      <div class="row">
+        <div class="field">
+          <label>No. of Facilities</label>
+          <input id="archFacilityCount" type="number" min="0" step="1" value="${escapeAttr(archCount)}">
+          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="fullWidth" id="archEditBtn">Edit Table</button>
+        </div>
+      </div>
 
-.modalHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 14px;
-  border-bottom:1px solid var(--line);
-  background:#0b1330;
-}
-.modalTitle{ font-weight:700; font-size:14px; }
-.modalCloseBtn{
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid #2b3a68;
-  background:transparent;
-}
+      <div class="groupTitle"><h3>Structure</h3></div>
+      <div class="row">
+        <div class="field">
+          <label>No. of Facilities</label>
+          <input id="strFacilityCount" type="number" min="0" step="1" value="${escapeAttr(strCount)}">
+          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="fullWidth" id="strEditBtn">Edit Table</button>
+        </div>
+      </div>
 
-.modalBody{ padding:14px; }
-.modalFooter{
-  padding:12px 14px;
-  border-top:1px solid var(--line);
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  background:#0b1330;
-}
+      <div class="groupTitle"><h3>MEP</h3></div>
+      <div class="checkGrid">${mepHtml}</div>
 
-.tableWrap{ overflow:auto; border:1px solid var(--line); border-radius:12px; }
-.tTable{
-  width:100%;
-  border-collapse:collapse;
-  min-width:560px;
-  background:#0b1330;
-}
-.tTable thead th{
-  text-align:left;
-  font-size:12px;
-  color:var(--muted);
-  padding:10px;
-  border-bottom:1px solid var(--line);
-  background:#0b1330;
-}
-.tTable tbody td{
-  padding:10px;
-  border-bottom:1px solid rgba(36,48,86,.65);
-  vertical-align:middle;
-}
-.tCenter{ text-align:center; }
-.muted{ color:var(--muted); }
+      <div class="groupTitle"><h3>Landscape</h3></div>
+      <div class="checkGrid">${landscapeHtml}</div>
 
-.tInput{
-  width:100%;
-  padding:9px 10px;
-  border-radius:10px;
-  border:1px solid #2b3a68;
-  background:#121a33;
-  color:var(--text);
-  outline:none;
-}
-.tInput:focus{ border-color:var(--focus); }
+      <div class="divider"></div>
+
+      <div class="row">
+        <div>
+          <div class="groupTitle"><h3>Wet Utilities</h3></div>
+          <div class="checkGrid">${wetHtml}</div>
+        </div>
+        <div>
+          <div class="groupTitle"><h3>Dry Utilities</h3></div>
+          <div class="checkGrid">${dryHtml}</div>
+        </div>
+      </div>
+    `;
+
+    wireEvents();
+  }
+
+  // ---------- Facility Table Modal ----------
+  function buildFacilityTableHtml(title, blockKey) {
+    const block = state.general[blockKey];
+    normalizeFacilities(block);
+
+    const rows = block.facilities.map((f, idx) => {
+      const i = idx + 1;
+      return `
+        <tr>
+          <td class="tCenter">Facility ${i}</td>
+          <td><input class="tInput" type="number" min="0" step="1" data-fkey="${blockKey}" data-row="${idx}" data-col="area" value="${escapeAttr(f.area)}"></td>
+          <td><input class="tInput" type="number" min="1" step="1" data-fkey="${blockKey}" data-row="${idx}" data-col="floors" value="${escapeAttr(f.floors)}"></td>
+        </tr>
+      `;
+    }).join("");
+
+    const body = `
+      <div class="smallNote">
+        Total Facilities: <b>${block.facilityCount}</b>
+      </div>
+
+      <div class="tableWrap">
+        <table class="tTable">
+          <thead>
+            <tr>
+              <th style="width:34%;">Facility No.</th>
+              <th style="width:33%;">Facility Area</th>
+              <th style="width:33%;">No. of Floors</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || `<tr><td colspan="3" class="tCenter muted">Set No. of Facilities &gt; 0</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    showModal(title, body);
+
+    // wire table inputs
+    const modalBody = document.getElementById("modalBody");
+    modalBody.addEventListener("input", onFacilityTableInput, { once: true });
+    modalBody.addEventListener("change", onFacilityTableInput, { once: true });
+    // Note: we re-attach again after each edit via requestAnimationFrame below
+  }
+
+  function onFacilityTableInput(e) {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement)) return;
+    if (!el.classList.contains("tInput")) return;
+
+    const blockKey = el.getAttribute("data-fkey");
+    const row = coerceInt(el.getAttribute("data-row"), -1);
+    const col = el.getAttribute("data-col");
+
+    if (!blockKey || row < 0 || !col) return;
+
+    const block = state.general[blockKey];
+    normalizeFacilities(block);
+
+    const rec = block.facilities[row];
+    if (!rec) return;
+
+    if (col === "area") {
+      rec.area = el.value;
+    } else if (col === "floors") {
+      rec.floors = Math.max(1, coerceInt(el.value, 1));
+      el.value = String(rec.floors);
+    }
+
+    preview();
+
+    // reattach listeners continuously
+    requestAnimationFrame(() => {
+      const modalBody = document.getElementById("modalBody");
+      if (modalBody) {
+        modalBody.addEventListener("input", onFacilityTableInput, { once: true });
+        modalBody.addEventListener("change", onFacilityTableInput, { once: true });
+      }
+    });
+  }
+
+  // ---------- Events ----------
+  function wireEvents() {
+    $("projectName").oninput = e => { state.projectName = e.target.value; preview(); };
+    $("projectAreaSqm").oninput = e => { state.projectAreaSqm = e.target.value; preview(); };
+    $("durationMonths").oninput = e => { state.durationMonths = e.target.value; preview(); };
+    $("drawingScale").onchange = e => { state.drawingScale = e.target.value; preview(); };
+
+    // BIM toggle: defer re-render to prevent stuck toggle
+    $("bimRequired").onchange = e => {
+      const value = e.target.checked;
+      state.bimRequired = value;
+      requestAnimationFrame(() => {
+        renderInputs();
+        preview();
+      });
+    };
+
+    $("archFacilityCount").oninput = e => {
+      state.general.architecture.facilityCount = coerceInt(e.target.value, 0);
+      normalizeFacilities(state.general.architecture);
+      preview();
+    };
+    $("strFacilityCount").oninput = e => {
+      state.general.structure.facilityCount = coerceInt(e.target.value, 0);
+      normalizeFacilities(state.general.structure);
+      preview();
+    };
+
+    $("archEditBtn").onclick = () => buildFacilityTableHtml("Architecture — Facilities Table", "architecture");
+    $("strEditBtn").onclick = () => buildFacilityTableHtml("Structure — Facilities Table", "structure");
+
+    $("inputs").onchange = e => {
+      const el = e.target;
+      if (!(el instanceof HTMLInputElement)) return;
+      if (el.type !== "checkbox") return;
+
+      const kind = el.dataset.kind;
+      const id = el.dataset.id;
+
+      if (kind === "required") {
+        state.requiredDetails[id] = el.checked;
+        preview();
+        return;
+      }
+
+      if (kind === "wet" || kind === "dry") {
+        if (!state.disciplines[kind]) state.disciplines[kind] = {};
+        state.disciplines[kind][id] = el.checked;
+        preview();
+        return;
+      }
+
+      if (kind === "mep") {
+        state.general.mep.systems[id] = el.checked;
+        preview();
+        return;
+      }
+
+      if (kind === "landscape") {
+        state.general.landscape.items[id] = el.checked;
+        preview();
+        return;
+      }
+    };
+  }
+
+  // ---------- Output Preview ----------
+  function preview() {
+    const projectOut = $("projectOut");
+    const durationOut = $("durationOut");
+    const jsonOut = $("jsonOut");
+
+    if (projectOut) projectOut.textContent = state.projectName || "—";
+    if (durationOut) durationOut.textContent = state.durationMonths || "—";
+    if (jsonOut) jsonOut.textContent = JSON.stringify(state, null, 2);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderInputs();
+    preview();
+  });
+})();
