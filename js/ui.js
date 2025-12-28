@@ -8,42 +8,48 @@
       ? APP_CONFIG.requiredDetailBim
       : APP_CONFIG.requiredDetailNonBim;
 
-    const requiredHtml = requiredList.map(item => `
-      <label class="checkItem">
-        <input type="checkbox" data-kind="required" data-id="${item.id}">
-        <div>
-          <div class="txt">${item.label}</div>
-          ${item.sub ? `<div class="sub">${item.sub}</div>` : ""}
-        </div>
-      </label>
-    `).join("");
+    const requiredHtml = requiredList.map(item => {
+      const checked = state.requiredDetails[item.id] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="required" data-id="${item.id}" ${checked}>
+          <div>
+            <div class="txt">${item.label}</div>
+            ${item.sub ? `<div class="sub">${item.sub}</div>` : ""}
+          </div>
+        </label>
+      `;
+    }).join("");
 
     const renderGroup = (group, title) => `
       <div class="groupTitle"><h3>${title}</h3></div>
       <div class="checkGrid">
-        ${APP_CONFIG.disciplines[group].map(d => `
-          <label class="checkItem">
-            <input type="checkbox" data-kind="${group}" data-id="${d}">
-            <div class="txt">${d}</div>
-          </label>
-        `).join("")}
+        ${APP_CONFIG.disciplines[group].map(d => {
+          const checked = state.disciplines[group]?.[d] ? "checked" : "";
+          return `
+            <label class="checkItem">
+              <input type="checkbox" data-kind="${group}" data-id="${d}" ${checked}>
+              <div class="txt">${d}</div>
+            </label>
+          `;
+        }).join("")}
       </div>
     `;
 
     $("inputs").innerHTML = `
       <div class="field">
         <label>Project Name</label>
-        <input id="projectName" type="text">
+        <input id="projectName" type="text" value="${state.projectName}">
       </div>
 
       <div class="row">
         <div class="field">
           <label>Project Area (sq.m)</label>
-          <input id="projectAreaSqm" type="number" min="0">
+          <input id="projectAreaSqm" type="number" min="0" value="${state.projectAreaSqm}">
         </div>
         <div class="field">
           <label>Required Duration (Months)</label>
-          <input id="durationMonths" type="number" min="1">
+          <input id="durationMonths" type="number" min="1" value="${state.durationMonths}">
         </div>
       </div>
 
@@ -51,7 +57,9 @@
         <div class="field">
           <label>Desired Drawing Scale</label>
           <select id="drawingScale">
-            ${APP_CONFIG.drawingScales.map(s => `<option value="${s}">${s}</option>`).join("")}
+            ${APP_CONFIG.drawingScales.map(s =>
+              `<option value="${s}" ${state.drawingScale === s ? "selected" : ""}>${s}</option>`
+            ).join("")}
           </select>
         </div>
 
@@ -61,7 +69,7 @@
             <div class="s">Switch to LOD mode</div>
           </div>
           <label class="switch">
-            <input id="bimRequired" type="checkbox">
+            <input id="bimRequired" type="checkbox" ${state.bimRequired ? "checked" : ""}>
             <span class="slider"></span>
           </label>
         </div>
@@ -81,33 +89,33 @@
   }
 
   function wireEvents() {
-    $("projectName").addEventListener("input", e => {
+    $("projectName").oninput = e => {
       state.projectName = e.target.value;
       preview();
-    });
+    };
 
-    $("projectAreaSqm").addEventListener("input", e => {
+    $("projectAreaSqm").oninput = e => {
       state.projectAreaSqm = e.target.value;
       preview();
-    });
+    };
 
-    $("durationMonths").addEventListener("input", e => {
+    $("durationMonths").oninput = e => {
       state.durationMonths = e.target.value;
       preview();
-    });
+    };
 
-    $("drawingScale").addEventListener("change", e => {
+    $("drawingScale").onchange = e => {
       state.drawingScale = e.target.value;
       preview();
-    });
+    };
 
-    $("bimRequired").addEventListener("change", e => {
+    $("bimRequired").onchange = e => {
       state.bimRequired = e.target.checked;
-      renderInputs();
+      renderInputs(); // re-render safely with preserved state
       preview();
-    });
+    };
 
-    $("inputs").addEventListener("change", e => {
+    $("inputs").onchange = e => {
       const el = e.target;
       if (el.type !== "checkbox") return;
 
@@ -122,7 +130,7 @@
       }
 
       preview();
-    });
+    };
   }
 
   function preview() {
