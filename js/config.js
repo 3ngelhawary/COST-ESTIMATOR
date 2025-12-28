@@ -1,6 +1,9 @@
 // File: js/config.js
-const APP_CONFIG = {
+
+// Expose config globally (required for GitHub Pages runtime)
+window.APP_CONFIG = {
   currencySymbol: "$",
+
   requiredDetailNonBim: [
     { id: "concept", label: "Concept Design" },
     { id: "schematic", label: "Schematic Design" },
@@ -8,6 +11,7 @@ const APP_CONFIG = {
     { id: "shop", label: "Shop Drawing" },
     { id: "asbuilt", label: "As-Built" }
   ],
+
   requiredDetailBim: [
     { id: "concept", label: "Concept Design", sub: "LOD 100" },
     { id: "schematic", label: "Schematic Design", sub: "LOD 200" },
@@ -15,6 +19,7 @@ const APP_CONFIG = {
     { id: "shop", label: "Shop Drawing", sub: "LOD 400" },
     { id: "asbuilt", label: "As-Built", sub: "LOD 500" }
   ],
+
   disciplines: {
     wet: [
       { id: "pw", label: "Potable Water" },
@@ -33,10 +38,11 @@ const APP_CONFIG = {
   }
 };
 
-const DEFAULT_STATE = {
+window.DEFAULT_STATE = {
   projectName: "",
   projectAreaSqm: "",
   bimRequired: false,
+
   requiredDetails: {
     concept: false,
     schematic: false,
@@ -44,6 +50,9 @@ const DEFAULT_STATE = {
     shop: false,
     asbuilt: false
   },
+
   disciplines: {
     wet: { pw: false, sew: false, stm: false, irr: false, ff: false },
-    dry: { lv: false, mv: false, hv: false, ica: false, ict: false
+    dry: { lv: false, mv: false, hv: false, ica: false, ict: false }
+  }
+};
