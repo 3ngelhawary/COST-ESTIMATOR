@@ -1,60 +1,101 @@
 // File: js/ui.js
 (function () {
   const $ = (id) => document.getElementById(id);
-  let state = structuredClone(DEFAULT_STATE);
 
-  function escapeHtml(str) {
-    return (str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+  // Compatibility: structuredClone fallback
+  function clone(obj) {
+    if (typeof structuredClone === "function") return structuredClone(obj);
+    return JSON.parse(JSON.stringify(obj));
   }
 
+  // Compatibility: avoid replaceAll (some environments fail)
+  function escapeHtml(str) {
+    const s = String(str ?? "");
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function debug(msg) {
+    const el = $("debugOut");
+    if (!el) return;
+    el.textContent = msg;
+  }
+
+  function safeRun(fn) {
+    try {
+      fn();
+    } catch (e) {
+      const message = (e && e.stack) ? e.stack : String(e);
+      debug(message);
+
+      // Also show something in inputs area so the page never looks "empty"
+      const inputsEl = $("inputs");
+      if (inputsEl) {
+        inputsEl.innerHTML = `
+          <div style="padding:12px;border:1px solid #243056;border-radius:12px;background:#0b1330;">
+            <div style="font-weight:700;margin-bottom:6px;">UI Error</div>
+            <div style="font-size:12px;opacity:.85;line-height:1.4;white-space:pre-wrap;">${escapeHtml(message)}</div>
+          </div>`;
+      }
+    }
+  }
+
+  // Global error hooks (so blank screen never happens)
+  window.addEventListener("error", (event) => {
+    const msg = event?.error?.stack || event?.message || "Unknown error";
+    debug(msg);
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    const msg = event?.reason?.stack || String(event?.reason || "Unhandled rejection");
+    debug(msg);
+  });
+
+  let state = clone(DEFAULT_STATE);
+
   function renderInputs() {
+    const inputsEl = $("inputs");
+    if (!inputsEl) throw new Error("Missing #inputs container in index.html");
+
     const requiredList = state.bimRequired
       ? APP_CONFIG.requiredDetailBim
       : APP_CONFIG.requiredDetailNonBim;
 
-    const requiredHtml = requiredList
-      .map((item) => {
-        const checked = state.requiredDetails[item.id] ? "checked" : "";
-        const sub = item.sub ? `<div class="sub">${item.sub}</div>` : "";
-        return `
-          <label class="checkItem">
-            <input type="checkbox" data-kind="required" data-id="${item.id}" ${checked}>
-            <div>
-              <div class="txt">${item.label}</div>
-              ${sub}
-            </div>
-          </label>`;
-      })
-      .join("");
+    const requiredHtml = requiredList.map((item) => {
+      const checked = state.requiredDetails[item.id] ? "checked" : "";
+      const sub = item.sub ? `<div class="sub">${escapeHtml(item.sub)}</div>` : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="required" data-id="${escapeHtml(item.id)}" ${checked}>
+          <div>
+            <div class="txt">${escapeHtml(item.label)}</div>
+            ${sub}
+          </div>
+        </label>`;
+    }).join("");
 
-    const wetHtml = APP_CONFIG.disciplines.wet
-      .map((item) => {
-        const checked = state.disciplines.wet[item.id] ? "checked" : "";
-        return `
-          <label class="checkItem">
-            <input type="checkbox" data-kind="wet" data-id="${item.id}" ${checked}>
-            <div><div class="txt">${item.label}</div></div>
-          </label>`;
-      })
-      .join("");
+    const wetHtml = APP_CONFIG.disciplines.wet.map((item) => {
+      const checked = state.disciplines.wet[item.id] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="wet" data-id="${escapeHtml(item.id)}" ${checked}>
+          <div><div class="txt">${escapeHtml(item.label)}</div></div>
+        </label>`;
+    }).join("");
 
-    const dryHtml = APP_CONFIG.disciplines.dry
-      .map((item) => {
-        const checked = state.disciplines.dry[item.id] ? "checked" : "";
-        return `
-          <label class="checkItem">
-            <input type="checkbox" data-kind="dry" data-id="${item.id}" ${checked}>
-            <div><div class="txt">${item.label}</div></div>
-          </label>`;
-      })
-      .join("");
+    const dryHtml = APP_CONFIG.disciplines.dry.map((item) => {
+      const checked = state.disciplines.dry[item.id] ? "checked" : "";
+      return `
+        <label class="checkItem">
+          <input type="checkbox" data-kind="dry" data-id="${escapeHtml(item.id)}" ${checked}>
+          <div><div class="txt">${escapeHtml(item.label)}</div></div>
+        </label>`;
+    }).join("");
 
-    $("inputs").innerHTML = `
+    inputsEl.innerHTML = `
       <div class="row">
         <div class="field">
           <label>Project Name</label>
@@ -82,9 +123,7 @@
         <h3>Required Detail</h3>
         <span class="pill">${state.bimRequired ? "LOD Mode" : "Design Mode"}</span>
       </div>
-      <div class="checkGrid">
-        ${requiredHtml}
-      </div>
+      <div class="checkGrid">${requiredHtml}</div>
 
       <div class="divider"></div>
 
@@ -109,23 +148,32 @@
   }
 
   function wireInputEvents() {
-    $("projectName").addEventListener("input", (e) => {
+    const nameEl = $("projectName");
+    const areaEl = $("projectAreaSqm");
+    const bimEl = $("bimRequired");
+    const inputsEl = $("inputs");
+
+    if (!nameEl || !areaEl || !bimEl || !inputsEl) {
+      throw new Error("One or more input elements not found after render.");
+    }
+
+    nameEl.addEventListener("input", (e) => {
       state.projectName = e.target.value;
       preview();
     });
 
-    $("projectAreaSqm").addEventListener("input", (e) => {
+    areaEl.addEventListener("input", (e) => {
       state.projectAreaSqm = e.target.value;
       preview();
     });
 
-    $("bimRequired").addEventListener("change", (e) => {
+    bimEl.addEventListener("change", (e) => {
       state.bimRequired = !!e.target.checked;
       renderInputs();
       preview();
     });
 
-    $("inputs").addEventListener("change", (e) => {
+    inputsEl.addEventListener("change", (e) => {
       const el = e.target;
       if (!(el instanceof HTMLInputElement)) return;
       if (el.type !== "checkbox") return;
@@ -144,22 +192,34 @@
 
   function preview() {
     const payload = buildInputPayload(state);
-    $("currencyOut").textContent = APP_CONFIG.currencySymbol;
-    $("projectOut").textContent = payload.projectName ? payload.projectName : "—";
-    $("jsonOut").textContent = JSON.stringify(payload, null, 2);
+    const curEl = $("currencyOut");
+    const projEl = $("projectOut");
+    const jsonEl = $("jsonOut");
+
+    if (curEl) curEl.textContent = APP_CONFIG.currencySymbol;
+    if (projEl) projEl.textContent = payload.projectName ? payload.projectName : "—";
+    if (jsonEl) jsonEl.textContent = JSON.stringify(payload, null, 2);
   }
 
   function resetAll() {
-    state = structuredClone(DEFAULT_STATE);
+    state = clone(DEFAULT_STATE);
     renderInputs();
     preview();
+    debug("No errors.");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    renderInputs();
-    preview();
+    safeRun(() => {
+      renderInputs();
+      preview();
+      debug("No errors.");
 
-    $("calcBtn").addEventListener("click", preview);
-    $("resetBtn").addEventListener("click", resetAll);
+      const calcBtn = $("calcBtn");
+      const resetBtn = $("resetBtn");
+      if (!calcBtn || !resetBtn) throw new Error("Missing calc/reset buttons.");
+
+      calcBtn.addEventListener("click", preview);
+      resetBtn.addEventListener("click", resetAll);
+    });
   });
 })();
