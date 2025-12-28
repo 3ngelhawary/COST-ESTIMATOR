@@ -18,8 +18,8 @@ body{
 
 .container{max-width:1100px;margin:0 auto;padding:0 16px;}
 .header{padding:18px 0;border-bottom:1px solid var(--line);background:rgba(18,26,51,.55);backdrop-filter: blur(6px);}
-.title{margin:0;font-size:20px;}
-.subtitle{margin-top:6px;color:var(--muted);font-size:13px;}
+.title{margin:0;font-size:22px;text-align:center;}
+.subtitle{margin-top:8px;color:var(--muted);font-size:13px;text-align:center;}
 .badge{display:inline-block;border:1px solid var(--line);padding:2px 8px;border-radius:999px;color:var(--text);}
 
 .layout{display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px;margin:18px 0 26px;}
@@ -89,33 +89,4 @@ input:focus{border-color:var(--focus);}
   background:white;border-radius:50%;transition:.2s;
 }
 .switch input:checked + .slider{border-color:var(--focus)}
-.switch input:checked + .slider:before{transform:translateX(24px)}
-
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-button{
-  padding:10px 12px;border-radius:12px;border:1px solid #2b3a68;
-  background:#17214a;color:var(--text);cursor:pointer;
-}
-button:hover{border-color:var(--focus)}
-button.secondary{background:transparent}
-
-.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.kpi{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0b1330}
-.kpiLabel{font-size:12px;color:var(--muted)}
-.kpiValue{font-size:16px;font-weight:700;margin-top:4px}
-
-.smallLabel{font-size:12px;color:var(--muted);margin-bottom:6px}
-.codebox{
-  margin:0;
-  padding:12px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:#0b1330;
-  overflow:auto;
-  min-height:240px;
-  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size:12px;
-  color:var(--text);
-}
-
-.footer{padding:18px 0;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+.sw
