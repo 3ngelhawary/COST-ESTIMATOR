@@ -3,15 +3,17 @@
   const { esc } = window.UIH;
 
   function fmt(n) {
-    if (!Number.isFinite(n)) return "—";
+    if (!Number.isFinite(n)) return "0.00";
     return (Math.round(n * 100) / 100).toFixed(2);
   }
 
   function render(model) {
+    const rateVal = fmt(model.avgManHourCost);
+
     return `
       <div class="field">
         <label>AVG. Man-Hours Cost ($/hr)</label>
-        <input id="avgManHourCost" type="number" min="0" step="0.01" value="${esc(fmt(model.avgManHourCost))}">
+        <input id="avgManHourCost" name="avgManHourCost" type="number" min="0" step="0.01" value="${esc(rateVal)}">
         <div class="smallNote">1 labor can achieve <b>${model.hoursPerPersonPerMonth}</b> hrs/month</div>
       </div>
 
@@ -43,22 +45,26 @@
           <thead>
             <tr>
               <th>Role</th>
-              <th class="tCenter" style="width:80px;">Qty</th>
-              <th class="tCenter" style="width:140px;">MH/Month</th>
-              <th class="tCenter" style="width:140px;">$/Month</th>
-              <th class="tCenter" style="width:140px;">Total $</th>
+              <th class="tCenter" style="width:70px;">Qty</th>
+              <th class="tCenter" style="width:120px;">MH/Month</th>
+              <th class="tCenter" style="width:120px;">$/Month</th>
+              <th class="tCenter" style="width:120px;">Total $</th>
             </tr>
           </thead>
           <tbody>
-            ${model.rows.length ? model.rows.map(r => `
-              <tr>
-                <td>${esc(r.role)}</td>
-                <td class="tCenter">${r.qty}</td>
-                <td class="tCenter">${fmt(r.mhPerMonth)}</td>
-                <td class="tCenter">${fmt(r.costPerMonth)}</td>
-                <td class="tCenter"><b>${fmt(r.total)}</b></td>
-              </tr>
-            `).join("") : `<tr><td colspan="5" class="tCenter muted">No staff defined yet</td></tr>`}
+            ${
+              model.rows.length
+                ? model.rows.map(r => `
+                  <tr>
+                    <td>${esc(r.role)}</td>
+                    <td class="tCenter">${r.qty}</td>
+                    <td class="tCenter">${fmt(r.mhPerMonth)}</td>
+                    <td class="tCenter">${fmt(r.costPerMonth)}</td>
+                    <td class="tCenter"><b>${fmt(r.total)}</b></td>
+                  </tr>
+                `).join("")
+                : `<tr><td colspan="5" class="tCenter muted">No staff in Project Team Structure</td></tr>`
+            }
           </tbody>
         </table>
       </div>
