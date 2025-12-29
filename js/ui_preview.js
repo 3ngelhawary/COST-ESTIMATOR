@@ -19,7 +19,6 @@
         <td>${esc(r.label)}</td>
         <td class="tCenter">${fmt(r.qty)}</td>
         <td class="tCenter">${unitFor(r.key)}</td>
-        <td class="tCenter"><b>${r.eng}</b></td>
         <td class="tCenter"><b>${fmt(r.dur)}</b></td>
       </tr>`).join("");
 
@@ -31,17 +30,13 @@
               <th>Discipline</th>
               <th class="tCenter" style="width:110px">Qty</th>
               <th class="tCenter" style="width:70px">Unit</th>
-              <th class="tCenter" style="width:120px">Engineers</th>
-              <th class="tCenter" style="width:130px">Duration (mo)</th>
+              <th class="tCenter" style="width:160px">Duration (Months)</th>
             </tr>
           </thead>
           <tbody>
-            ${rows || `<tr><td colspan="5" class="tCenter muted">Select phases + disciplines</td></tr>`}
+            ${rows || `<tr><td colspan="4" class="tCenter muted">Select phases + disciplines</td></tr>`}
           </tbody>
         </table>
-      </div>
-      <div class="smallNote" style="margin-top:10px;">
-        Workflow: <b>${res.workflow.toUpperCase()}</b> • Phases: <b>${res.phases.length?res.phases.join(", "):"—"}</b>
       </div>
     `;
   }
@@ -50,10 +45,11 @@
     const st = window.AppState.get();
 
     $("projectOut").textContent = st.projectName || "—";
+
     const len = window.UIInputs.effectiveLength(st);
     $("lengthOut").textContent = len ? fmt(len) : "—";
 
-    // Team Structure (editable, persisted)
+    // Team Structure (editable)
     const team = window.TeamModel.build(st);
     $("teamOut").innerHTML = window.UITeam.render(team);
 
@@ -66,15 +62,31 @@
       window.UIRender.preview();
     };
 
-    // Duration uses team structure engineers
+    // Duration calculation
     const res = window.RatesEngine.compute(st);
-    const projDur = res.projectDuration || 0;
-    st.calculatedDurationMonths = fmt(projDur);
-    $("durationOut").textContent = st.calculatedDurationMonths;
+    const calcDur = res.projectDuration || 0;
+    st.calculatedDurationMonths = fmt(calcDur);
 
+    $("durationOut").textContent = st.calculatedDurationMonths;
     $("durationBreakdownOut").innerHTML = renderBreakdown(res);
 
-    // keep JSON hidden
+    // ⚠ WARNING LOGIC
+    const req = parseFloat(st.durationMonths);
+    let warn = document.getElementById("durationWarn");
+    if (!warn){
+      warn = document.createElement("div");
+      warn.id = "durationWarn";
+      warn.className = "warnText";
+      $("durationBreakdownOut").after(warn);
+    }
+
+    if (req > 0 && calcDur > req){
+      warn.textContent =
+        "⚠ Calculated duration exceeds required duration. Increase project staff to meet the schedule.";
+      warn.style.display = "block";
+    } else {
+      warn.style.display = "none";
+    }
   }
 
   window.UIPreview = { preview };
