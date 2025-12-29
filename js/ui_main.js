@@ -6,8 +6,17 @@
     const st = window.AppState.get();
 
     $("projectName").oninput = (e)=>{ st.projectName = e.target.value; window.UIRender.preview(); };
-    $("projectAreaSqm").oninput = (e)=>{ st.projectAreaSqm = e.target.value; window.UIRender.preview(); };
+    $("projectAreaSqm").oninput = (e)=>{ st.projectAreaSqm = e.target.value; window.UIRender.renderInputs(); bind(); window.UIRender.preview(); };
     $("durationMonths").oninput = (e)=>{ st.durationMonths = e.target.value; window.UIRender.preview(); };
+
+    $("lengthOverride").onchange = (e)=>{
+      st.lengthOverride = !!e.target.checked;
+      requestAnimationFrame(()=>{ window.UIRender.renderInputs(); bind(); window.UIRender.preview(); });
+    };
+
+    const pl = document.getElementById("projectLength");
+    if (pl) pl.oninput = (e)=>{ st.projectLengthManual = e.target.value; window.UIRender.preview(); };
+
     $("drawingScale").onchange = (e)=>{ st.drawingScale = e.target.value; window.UIRender.preview(); };
 
     $("bimRequired").onchange = (e)=>{
@@ -39,8 +48,8 @@
       if (k === "required") st.requiredDetails[id] = el.checked;
       else if (k === "wet") st.disciplines.wet[id] = el.checked;
       else if (k === "dry") st.disciplines.dry[id] = el.checked;
-      else if (k === "mep") st.general.mep.systems[id] = el.checked;
       else if (k === "landscape") st.general.landscape.items[id] = el.checked;
+      else if (k === "mep") st.general.mep.systems[id] = el.checked;
 
       window.UIRender.preview();
     };
