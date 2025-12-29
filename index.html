@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/base.css?v=11" />
-  <link rel="stylesheet" href="css/forms.css?v=11" />
-  <link rel="stylesheet" href="css/output.css?v=11" />
-  <link rel="stylesheet" href="css/modal.css?v=11" />
+  <link rel="stylesheet" href="css/base.css?v=12" />
+  <link rel="stylesheet" href="css/forms.css?v=12" />
+  <link rel="stylesheet" href="css/output.css?v=12" />
+  <link rel="stylesheet" href="css/modal.css?v=12" />
 </head>
 <body>
 
@@ -50,10 +50,12 @@
       <div class="smallNote">Auto-generated based on Required Duration + activated scope items.</div>
       <div id="teamOut"></div>
 
-      <div class="divider"></div>
-
-      <div class="smallLabel">Captured Inputs (JSON)</div>
-      <pre class="codebox" id="jsonOut">{}</pre>
+      <!-- Captured inputs hidden -->
+      <div id="jsonWrap" style="display:none;">
+        <div class="divider"></div>
+        <div class="smallLabel">Captured Inputs (JSON)</div>
+        <pre class="codebox" id="jsonOut">{}</pre>
+      </div>
     </section>
 
     <section class="card">
@@ -68,19 +70,20 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=11"></script>
-<script src="js/calculator.js?v=11"></script>
+<script src="js/config.js?v=12"></script>
+<script src="js/calculator.js?v=12"></script>
 
-<script src="js/state.js?v=11"></script>
-<script src="js/ui_helpers.js?v=11"></script>
-<script src="js/ui_modal.js?v=11"></script>
-<script src="js/ui_facilities.js?v=11"></script>
-<script src="js/ui_team.js?v=11"></script>
+<script src="js/state.js?v=12"></script>
+<script src="js/ui_helpers.js?v=12"></script>
+<script src="js/ui_modal.js?v=12"></script>
 
-<script src="js/ui_inputs.js?v=11"></script>
-<script src="js/ui_preview.js?v=11"></script>
-<script src="js/ui_render.js?v=11"></script>
-<script src="js/ui_main.js?v=11"></script>
+<script src="js/ui_facilityinfo.js?v=12"></script>
+<script src="js/ui_team.js?v=12"></script>
+
+<script src="js/ui_inputs.js?v=12"></script>
+<script src="js/ui_preview.js?v=12"></script>
+<script src="js/ui_render.js?v=12"></script>
+<script src="js/ui_main.js?v=12"></script>
 
 </body>
 </html>
