@@ -5,7 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css?v=7" />
+  <link rel="stylesheet" href="css/base.css?v=10" />
+  <link rel="stylesheet" href="css/forms.css?v=10" />
+  <link rel="stylesheet" href="css/output.css?v=10" />
+  <link rel="stylesheet" href="css/modal.css?v=10" />
 </head>
 <body>
 
@@ -18,13 +21,11 @@
 <main class="container">
   <div class="layout" style="grid-template-columns: 1fr 1fr 1fr;">
 
-    <!-- Window 1 -->
     <section class="card">
       <h2 class="cardTitle">Project Data Input</h2>
       <div id="inputs"></div>
     </section>
 
-    <!-- Window 2 -->
     <section class="card">
       <h2 class="cardTitle">Output Data</h2>
 
@@ -51,12 +52,9 @@
       <pre class="codebox" id="jsonOut">{}</pre>
     </section>
 
-    <!-- Window 3 -->
     <section class="card">
       <h2 class="cardTitle">Pricing (Break Down)</h2>
-      <div class="smallNote">
-        Pricing logic will be added next.
-      </div>
+      <div class="smallNote">Pricing logic will be added next.</div>
     </section>
 
   </div>
@@ -66,8 +64,16 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=7"></script>
-<script src="js/calculator.js?v=7"></script>
-<script src="js/ui.js?v=7"></script>
+<script src="js/config.js?v=10"></script>
+<script src="js/calculator.js?v=10"></script>
+
+<script src="js/state.js?v=10"></script>
+<script src="js/ui_helpers.js?v=10"></script>
+<script src="js/ui_modal.js?v=10"></script>
+<script src="js/ui_facilities.js?v=10"></script>
+<script src="js/ui_team.js?v=10"></script>
+<script src="js/ui_render.js?v=10"></script>
+<script src="js/ui_main.js?v=10"></script>
+
 </body>
 </html>
