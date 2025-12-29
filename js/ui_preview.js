@@ -1,28 +1,37 @@
 // File: js/ui_preview.js
 (function () {
-  const { $, f } = window.UIH;
+  const { $ } = window.UIH;
 
   function preview() {
     const st = window.AppState.get();
+
     $("projectOut").textContent = st.projectName || "—";
     $("durationOut").textContent = st.durationMonths || "—";
-
-    const len = window.UIInputs.effectiveLength(st);
-    $("lengthOut").textContent = len ? String(Math.round(len*100)/100) : "—";
+    $("lengthOut").textContent =
+      window.UIInputs.effectiveLength(st)?.toFixed(2) || "—";
 
     const team = window.UITeam.build();
     $("teamOut").innerHTML = window.UITeam.render(team);
 
-    const payload = {
-      ...st,
-      output: {
-        projectLengthMeters: len,
-        projectLengthAutoMeters: window.UIInputs.autoLengthMeters(st),
-        teamStructure: team
-      }
+    // Capture edited quantities
+    $("teamOut").oninput = (e) => {
+      const el = e.target;
+      if (!(el instanceof HTMLInputElement)) return;
+
+      const idx = parseInt(el.dataset.idx, 10);
+      const type = el.dataset.team;
+      if (!Number.isFinite(idx) || !type) return;
+
+      const qty = Math.max(0, parseInt(el.value || "0", 10));
+
+      if (type === "senior") team.seniors[idx].qty = qty;
+      if (type === "junior") team.juniors[idx].qty = qty;
     };
 
-    $("jsonOut").textContent = JSON.stringify(payload, null, 2);
+    // Store for future duration & pricing engine
+    st.output = {
+      teamStructure: team
+    };
   }
 
   window.UIPreview = { preview };
