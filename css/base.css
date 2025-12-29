@@ -1,13 +1,203 @@
-/* File: css/base.css */
-:root{--bg:#0b1020;--card:#121a33;--muted:#9fb0d0;--text:#e8eefc;--line:#243056;--focus:#4f6bff}
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--text)}
-.container{max-width:1200px;margin:0 auto;padding:0 16px}
-.header{padding:18px 0;border-bottom:1px solid var(--line);background:rgba(18,26,51,.55);backdrop-filter:blur(6px)}
-.title{margin:0;font-size:22px;text-align:center}
-.layout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0 26px}
-@media (max-width:1100px){.layout{grid-template-columns:1fr}}
-.card{background:rgba(18,26,51,.92);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.cardTitle{margin:0 0 12px;font-size:16px}
-.divider{height:1px;background:var(--line);margin:12px 0}
-.footer{padding:18px 0;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center}
+/* =========================
+   GLOBAL RESET
+========================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================
+   ROOT VARIABLES
+========================= */
+:root {
+  --bg-main: #0b1220;
+  --bg-card: #121c36;
+  --bg-card-2: #0f1a2f;
+
+  --text-main: #ffffff;
+  --text-muted: #9aa4bf;
+  --accent: #3b82f6;
+  --border-soft: rgba(255, 255, 255, 0.08);
+
+  --radius: 12px;
+  --gap: 20px;
+}
+
+/* =========================
+   BODY
+========================= */
+body {
+  background: linear-gradient(180deg, #0b1220 0%, #0a0f1c 100%);
+  color: var(--text-main);
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================
+   HEADER / FOOTER
+========================= */
+.header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-soft);
+  margin-top: 30px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* =========================
+   CONTAINER (LEFT-ALIGNED)
+========================= */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* =========================
+   MAIN GRID LAYOUT
+========================= */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--gap);
+
+  /* 🔴 CRITICAL FIX */
+  justify-content: start;
+  align-items: start;
+
+  margin-top: 20px;
+}
+
+/* =========================
+   CARD (WINDOW)
+========================= */
+.card {
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-card-2) 100%);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border-soft);
+
+  /* prevent auto-centering */
+  margin: 0;
+}
+
+/* =========================
+   TITLES
+========================= */
+.title {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* =========================
+   TEXT HELPERS
+========================= */
+.smallNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.warnText {
+  color: #fbbf24;
+  font-size: 13px;
+}
+
+/* =========================
+   DIVIDERS
+========================= */
+.divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 16px 0;
+}
+
+/* =========================
+   KPI BLOCKS
+========================= */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.kpi {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.kpiLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.kpiValue {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* =========================
+   TABLES
+========================= */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.tTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tTable th,
+.tTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13px;
+}
+
+.tTable th {
+  text-align: left;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.tCenter {
+  text-align: center;
+}
+
+/* =========================
+   RESPONSIVE (STACK ON SMALL)
+========================= */
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+}
