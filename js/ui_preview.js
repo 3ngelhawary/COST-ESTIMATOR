@@ -49,7 +49,7 @@
     const len = window.UIInputs.effectiveLength(st);
     $("lengthOut").textContent = len ? fmt(len) : "—";
 
-    // Team Structure (editable)
+    // ✅ Team Structure (editable; persists via teamOverrides)
     const team = window.TeamModel.build(st);
     $("teamOut").innerHTML = window.UITeam.render(team);
 
@@ -62,30 +62,21 @@
       window.UIRender.preview();
     };
 
-    // Duration calculation
+    // ✅ Duration (based on rates + selected phases + selected disciplines + team structure engineers)
     const res = window.RatesEngine.compute(st);
     const calcDur = res.projectDuration || 0;
-    st.calculatedDurationMonths = fmt(calcDur);
 
-    $("durationOut").textContent = st.calculatedDurationMonths;
     $("durationBreakdownOut").innerHTML = renderBreakdown(res);
+    $("calcDurationOut").textContent = fmt(calcDur);
 
-    // ⚠ WARNING LOGIC
+    // ✅ Warning if calculated > required
     const req = parseFloat(st.durationMonths);
-    let warn = document.getElementById("durationWarn");
-    if (!warn){
-      warn = document.createElement("div");
-      warn.id = "durationWarn";
-      warn.className = "warnText";
-      $("durationBreakdownOut").after(warn);
-    }
-
-    if (req > 0 && calcDur > req){
-      warn.textContent =
+    if (req > 0 && Number.isFinite(calcDur) && calcDur > req) {
+      $("durationWarn").textContent =
         "⚠ Calculated duration exceeds required duration. Increase project staff to meet the schedule.";
-      warn.style.display = "block";
+      $("durationWarn").style.display = "block";
     } else {
-      warn.style.display = "none";
+      $("durationWarn").style.display = "none";
     }
   }
 
