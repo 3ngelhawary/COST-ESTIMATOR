@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/base.css?v=14" />
-  <link rel="stylesheet" href="css/forms.css?v=14" />
-  <link rel="stylesheet" href="css/output.css?v=14" />
-  <link rel="stylesheet" href="css/modal.css?v=14" />
+  <link rel="stylesheet" href="css/base.css?v=15" />
+  <link rel="stylesheet" href="css/forms.css?v=15" />
+  <link rel="stylesheet" href="css/output.css?v=15" />
+  <link rel="stylesheet" href="css/modal.css?v=15" />
 </head>
 <body>
 
@@ -34,33 +34,30 @@
           <div class="kpiLabel">Project</div>
           <div class="kpiValue" id="projectOut">—</div>
         </div>
-        <div class="kpi">
-          <div class="kpiLabel">Calculated Duration (Months)</div>
-          <div class="kpiValue" id="durationOut">—</div>
-        </div>
+
         <div class="kpi">
           <div class="kpiLabel">Project Length (m)</div>
           <div class="kpiValue" id="lengthOut">—</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpiLabel">Calculated Project Duration (Months)</div>
+          <div class="kpiValue" id="calcDurationOut">—</div>
         </div>
       </div>
 
       <div class="divider"></div>
 
       <div class="groupTitle"><h3>Duration Breakdown</h3></div>
-      <div class="smallNote">Engineers are controlled from “Project Team Structure”. Overall duration = max discipline duration.</div>
+      <div class="smallNote">Duration is calculated from your Project Team Structure + selected phases + selected disciplines.</div>
       <div id="durationBreakdownOut"></div>
+      <div id="durationWarn" class="warnText" style="display:none;margin-top:10px;"></div>
 
       <div class="divider"></div>
 
       <div class="groupTitle"><h3>Project Team Structure</h3></div>
-      <div class="smallNote">You can change the initial generated numbers here.</div>
+      <div class="smallNote">Change staff numbers here. Duration updates automatically.</div>
       <div id="teamOut"></div>
-
-      <div id="jsonWrap" style="display:none;">
-        <div class="divider"></div>
-        <div class="smallLabel">Captured Inputs (JSON)</div>
-        <pre class="codebox" id="jsonOut">{}</pre>
-      </div>
     </section>
 
     <section class="card">
@@ -75,24 +72,24 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=14"></script>
-<script src="js/calculator.js?v=14"></script>
+<script src="js/config.js?v=15"></script>
+<script src="js/calculator.js?v=15"></script>
 
-<script src="js/state.js?v=14"></script>
-<script src="js/ui_helpers.js?v=14"></script>
-<script src="js/ui_modal.js?v=14"></script>
-<script src="js/ui_facilityinfo.js?v=14"></script>
+<script src="js/state.js?v=15"></script>
+<script src="js/ui_helpers.js?v=15"></script>
+<script src="js/ui_modal.js?v=15"></script>
+<script src="js/ui_facilityinfo.js?v=15"></script>
 
-<script src="js/team_model.js?v=14"></script>
-<script src="js/ui_team.js?v=14"></script>
+<script src="js/team_model.js?v=15"></script>
+<script src="js/ui_team.js?v=15"></script>
 
-<script src="js/rates_data.js?v=14"></script>
-<script src="js/rates_engine.js?v=14"></script>
+<script src="js/rates_data.js?v=15"></script>
+<script src="js/rates_engine.js?v=15"></script>
 
-<script src="js/ui_inputs.js?v=14"></script>
-<script src="js/ui_preview.js?v=14"></script>
-<script src="js/ui_render.js?v=14"></script>
-<script src="js/ui_main.js?v=14"></script>
+<script src="js/ui_inputs.js?v=15"></script>
+<script src="js/ui_preview.js?v=15"></script>
+<script src="js/ui_render.js?v=15"></script>
+<script src="js/ui_main.js?v=15"></script>
 
 </body>
 </html>
