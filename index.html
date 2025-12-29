@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/base.css?v=12" />
-  <link rel="stylesheet" href="css/forms.css?v=12" />
-  <link rel="stylesheet" href="css/output.css?v=12" />
-  <link rel="stylesheet" href="css/modal.css?v=12" />
+  <link rel="stylesheet" href="css/base.css?v=13" />
+  <link rel="stylesheet" href="css/forms.css?v=13" />
+  <link rel="stylesheet" href="css/output.css?v=13" />
+  <link rel="stylesheet" href="css/modal.css?v=13" />
 </head>
 <body>
 
@@ -35,7 +35,7 @@
           <div class="kpiValue" id="projectOut">—</div>
         </div>
         <div class="kpi">
-          <div class="kpiLabel">Duration (Months)</div>
+          <div class="kpiLabel">Calculated Duration (Months)</div>
           <div class="kpiValue" id="durationOut">—</div>
         </div>
         <div class="kpi">
@@ -46,11 +46,16 @@
 
       <div class="divider"></div>
 
+      <div class="groupTitle"><h3>Duration Breakdown (Editable Engineers)</h3></div>
+      <div class="smallNote">Overall duration = max discipline duration. Quantity conversions: km=m/1000, ha=m²/10000.</div>
+      <div id="durationBreakdownOut"></div>
+
+      <div class="divider"></div>
+
       <div class="groupTitle"><h3>Project Team Structure</h3></div>
-      <div class="smallNote">Auto-generated based on Required Duration + activated scope items.</div>
+      <div class="smallNote">Editable quantities here are independent from duration breakdown (for now).</div>
       <div id="teamOut"></div>
 
-      <!-- Captured inputs hidden -->
       <div id="jsonWrap" style="display:none;">
         <div class="divider"></div>
         <div class="smallLabel">Captured Inputs (JSON)</div>
@@ -70,20 +75,22 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=12"></script>
-<script src="js/calculator.js?v=12"></script>
+<script src="js/config.js?v=13"></script>
+<script src="js/calculator.js?v=13"></script>
 
-<script src="js/state.js?v=12"></script>
-<script src="js/ui_helpers.js?v=12"></script>
-<script src="js/ui_modal.js?v=12"></script>
+<script src="js/state.js?v=13"></script>
+<script src="js/ui_helpers.js?v=13"></script>
+<script src="js/ui_modal.js?v=13"></script>
+<script src="js/ui_facilityinfo.js?v=13"></script>
+<script src="js/ui_team.js?v=13"></script>
 
-<script src="js/ui_facilityinfo.js?v=12"></script>
-<script src="js/ui_team.js?v=12"></script>
+<script src="js/rates_data.js?v=13"></script>
+<script src="js/rates_engine.js?v=13"></script>
 
-<script src="js/ui_inputs.js?v=12"></script>
-<script src="js/ui_preview.js?v=12"></script>
-<script src="js/ui_render.js?v=12"></script>
-<script src="js/ui_main.js?v=12"></script>
+<script src="js/ui_inputs.js?v=13"></script>
+<script src="js/ui_preview.js?v=13"></script>
+<script src="js/ui_render.js?v=13"></script>
+<script src="js/ui_main.js?v=13"></script>
 
 </body>
 </html>
