@@ -20,21 +20,26 @@ window.APP_CONFIG = {
     wet: ["Potable Water", "Sewage", "Storm", "Irrigation", "Fire Fighting"],
     dry: ["Low Voltage", "Medium Voltage", "High Voltage", "ICA", "ICT"]
   },
-  mepSystems: ["Lighting","HVAC","Chiller","Plumbing","Firefighting","Power","Data cabling","CCTV","Telephone","BMS"],
+  mepSystems: ["Lighting","HVAC","Chiller","Plumbing","Fire Fighting","Power","Data cabling","CCTV","Telephone","BMS"],
   facilityTypes: ["Tank","Sump","Chamber","Building"],
   roadLandscapeItems: ["Master Planning","Roads","Secondary Irrigation","Sub-Soil Drainage"]
 };
 
+// ✅ IMPORTANT: default phases ON so duration calculates immediately once any discipline is selected
 window.DEFAULT_STATE = {
   projectName: "",
   projectAreaSqm: "",
-  durationMonths: "",
+  durationMonths: "",            // Required Duration (user input)
   drawingScale: "1:1000",
   bimRequired: false,
   lengthOverride: false,
   projectLengthManual: "",
-  requiredDetails: { concept:false, schematic:false, detail:false, shop:false, asbuilt:false },
+
+  requiredDetails: { concept:true, schematic:true, detail:true, shop:true, asbuilt:true },
+
   disciplines: { wet:{}, dry:{} },
   roadLandscape: { items:{} },
-  facilities: []
+  facilities: [],
+
+  teamOverrides: {}
 };
