@@ -4,8 +4,7 @@
 
   function autoLengthMeters(st){
     const area = f(st.projectAreaSqm, 0);
-    if (area <= 0) return 0;
-    return area * 0.20;
+    return area > 0 ? area * 0.20 : 0;
   }
 
   function effectiveLength(st){
@@ -18,8 +17,9 @@
 
   function renderInputs() {
     const st = window.AppState.get();
-    window.UIFacilities.normalize(st.general.architecture);
-    window.UIFacilities.normalize(st.general.structure);
+    if (!st.roadLandscape) st.roadLandscape = { items:{} };
+    if (!st.roadLandscape.items) st.roadLandscape.items = {};
+    if (!Array.isArray(st.facilities)) st.facilities = [];
 
     const req = st.bimRequired ? window.APP_CONFIG.requiredDetailBim : window.APP_CONFIG.requiredDetailNonBim;
     const reqHtml = req.map(it=>`
@@ -77,28 +77,22 @@
         <div><div class="groupTitle"><h3>Dry Utilities</h3></div><div class="checkGrid">${grid(window.APP_CONFIG.disciplines.dry,"dry",st.disciplines.dry)}</div></div>
       </div>
 
-      <div class="groupTitle"><h3>Landscape</h3></div>
-      <div class="checkGrid">${grid(window.APP_CONFIG.landscapeItems,"landscape",st.general.landscape.items)}</div>
+      <div class="groupTitle"><h3>Road/Landscape</h3></div>
+      <div class="checkGrid">${grid(window.APP_CONFIG.roadLandscapeItems,"roadLandscape",st.roadLandscape.items)}</div>
 
-      <div class="groupTitle"><h3>MEP</h3></div>
-      <div class="checkGrid">${grid(window.APP_CONFIG.mepSystems,"mep",st.general.mep.systems)}</div>
+      <div class="divider"></div>
 
-      <div class="groupTitle"><h3>Architecture</h3></div>
+      <div class="groupTitle"><h3>Facility Information</h3></div>
       <div class="row">
-        <div class="field"><label>No. of Facilities</label>
-          <input id="archFacilityCount" type="number" min="0" step="1" value="${esc(st.general.architecture.facilityCount)}">
-          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
+        <div class="field">
+          <label>Total Facility Rows</label>
+          <input type="number" value="${st.facilities.length}" disabled>
+          <div class="smallNote">Use the table to define facility scope (Arch/Structure/MEP) per facility type.</div>
         </div>
-        <div class="field"><label>&nbsp;</label><button type="button" class="fullWidth" id="archEditBtn">Edit Table</button></div>
-      </div>
-
-      <div class="groupTitle"><h3>Structure</h3></div>
-      <div class="row">
-        <div class="field"><label>No. of Facilities</label>
-          <input id="strFacilityCount" type="number" min="0" step="1" value="${esc(st.general.structure.facilityCount)}">
-          <div class="smallNote">Click "Edit Table" to enter area & floors for each facility.</div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button type="button" class="fullWidth" id="facilityInfoBtn">Open Facility Table</button>
         </div>
-        <div class="field"><label>&nbsp;</label><button type="button" class="fullWidth" id="strEditBtn">Edit Table</button></div>
       </div>
     `;
   }
