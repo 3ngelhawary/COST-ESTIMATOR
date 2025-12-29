@@ -7,20 +7,19 @@
     return (Math.round(n*100)/100).toFixed(2);
   }
 
-  function renderBreakdown(res, st){
-    if (!st.durationEngineers) st.durationEngineers = {};
-    const unitFor = (k)=> (["wet","dry","roads"].includes(k) ? "km" : (["landscape","secIrr"].includes(k) ? "ha" : "m²"));
+  function unitFor(k){
+    if (["wet","dry","roads"].includes(k)) return "km";
+    if (["landscape","secIrr"].includes(k)) return "ha";
+    return "m²";
+  }
 
+  function renderBreakdown(res){
     const rows = res.rows.map(r=>`
       <tr>
         <td>${esc(r.label)}</td>
         <td class="tCenter">${fmt(r.qty)}</td>
         <td class="tCenter">${unitFor(r.key)}</td>
-        <td class="tCenter">
-          <input type="number" min="0" step="1" value="${r.eng}"
-                 data-engkey="${esc(r.key)}"
-                 style="width:70px;text-align:center;">
-        </td>
+        <td class="tCenter"><b>${r.eng}</b></td>
         <td class="tCenter"><b>${fmt(r.dur)}</b></td>
       </tr>`).join("");
 
@@ -49,28 +48,33 @@
 
   function preview() {
     const st = window.AppState.get();
+
     $("projectOut").textContent = st.projectName || "—";
     const len = window.UIInputs.effectiveLength(st);
     $("lengthOut").textContent = len ? fmt(len) : "—";
 
+    // Team Structure (editable, persisted)
+    const team = window.TeamModel.build(st);
+    $("teamOut").innerHTML = window.UITeam.render(team);
+
+    $("teamOut").oninput = (e)=>{
+      const el = e.target;
+      if (!(el instanceof HTMLInputElement)) return;
+      const role = el.getAttribute("data-role");
+      if (!role) return;
+      window.TeamModel.setQty(st, role, el.value);
+      window.UIRender.preview();
+    };
+
+    // Duration uses team structure engineers
     const res = window.RatesEngine.compute(st);
     const projDur = res.projectDuration || 0;
     st.calculatedDurationMonths = fmt(projDur);
     $("durationOut").textContent = st.calculatedDurationMonths;
 
-    $("durationBreakdownOut").innerHTML = renderBreakdown(res, st);
-    $("durationBreakdownOut").oninput = (e)=>{
-      const el = e.target;
-      if (!(el instanceof HTMLInputElement)) return;
-      const k = el.getAttribute("data-engkey");
-      if (!k) return;
-      st.durationEngineers[k] = Math.max(0, parseInt(el.value||"0",10) || 0);
-      window.UIRender.renderInputs();
-      window.UIRender.preview();
-    };
+    $("durationBreakdownOut").innerHTML = renderBreakdown(res);
 
-    const team = window.UITeam.build();
-    $("teamOut").innerHTML = window.UITeam.render(team);
+    // keep JSON hidden
   }
 
   window.UIPreview = { preview };
