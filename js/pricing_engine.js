@@ -1,21 +1,27 @@
 // File: js/pricing_engine.js
 (function () {
-  const { f } = window.UIH;
-
   const HOURS_PER_PERSON_PER_MONTH = 200;
 
+  function num(x, d = 0) {
+    const n = parseFloat(String(x ?? "").replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : d;
+  }
+
   function compute(teamRoles, durationMonths, avgManHourCost) {
-    const dur = Math.max(0, f(durationMonths, 0));
-    const rate = Math.max(0, f(avgManHourCost, 0));
+    const dur = Math.max(0, num(durationMonths, 0));
+    const rate = Math.max(0, num(avgManHourCost, 0));
 
     const rows = (teamRoles || [])
-      .filter(r => f(r.qty, 0) > 0)
+      .map(r => ({
+        role: String(r.role ?? "").trim(),
+        qty: Math.max(0, Math.round(num(r.qty, 0)))
+      }))
+      .filter(r => r.role && r.qty > 0)
       .map(r => {
-        const qty = f(r.qty, 0);
-        const mhPerMonth = qty * HOURS_PER_PERSON_PER_MONTH;
+        const mhPerMonth = r.qty * HOURS_PER_PERSON_PER_MONTH;
         const costPerMonth = mhPerMonth * rate;
         const total = costPerMonth * dur;
-        return { role: r.role, qty, mhPerMonth, costPerMonth, total };
+        return { ...r, mhPerMonth, costPerMonth, total };
       });
 
     const totalStaff = rows.reduce((s, r) => s + r.qty, 0);
