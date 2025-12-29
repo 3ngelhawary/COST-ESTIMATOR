@@ -4,6 +4,9 @@
 
   function bind() {
     const st = window.AppState.get();
+    if (!st.roadLandscape) st.roadLandscape = { items:{} };
+    if (!st.roadLandscape.items) st.roadLandscape.items = {};
+    if (!Array.isArray(st.facilities)) st.facilities = [];
 
     $("projectName").oninput = (e)=>{ st.projectName = e.target.value; window.UIRender.preview(); };
     $("projectAreaSqm").oninput = (e)=>{ st.projectAreaSqm = e.target.value; window.UIRender.renderInputs(); bind(); window.UIRender.preview(); };
@@ -24,32 +27,20 @@
       requestAnimationFrame(()=>{ window.UIRender.renderInputs(); bind(); window.UIRender.preview(); });
     };
 
-    $("archFacilityCount").oninput = (e)=>{
-      st.general.architecture.facilityCount = Math.max(0, i(e.target.value,0));
-      window.UIFacilities.normalize(st.general.architecture);
-      window.UIRender.preview();
-    };
-
-    $("strFacilityCount").oninput = (e)=>{
-      st.general.structure.facilityCount = Math.max(0, i(e.target.value,0));
-      window.UIFacilities.normalize(st.general.structure);
-      window.UIRender.preview();
-    };
-
-    $("archEditBtn").onclick = ()=>window.UIFacilities.openTable("Architecture — Facilities Table","architecture");
-    $("strEditBtn").onclick  = ()=>window.UIFacilities.openTable("Structure — Facilities Table","structure");
+    $("facilityInfoBtn").onclick = ()=>window.UIFacilityInfo.openFacilityTable();
 
     $("inputs").onchange = (e)=>{
       const el = e.target;
       if (!(el instanceof HTMLInputElement) || el.type !== "checkbox") return;
+
+      // delegated groups only
       const k = el.dataset.k, id = el.dataset.id;
       if (!k || !id) return;
 
       if (k === "required") st.requiredDetails[id] = el.checked;
       else if (k === "wet") st.disciplines.wet[id] = el.checked;
       else if (k === "dry") st.disciplines.dry[id] = el.checked;
-      else if (k === "landscape") st.general.landscape.items[id] = el.checked;
-      else if (k === "mep") st.general.mep.systems[id] = el.checked;
+      else if (k === "roadLandscape") st.roadLandscape.items[id] = el.checked;
 
       window.UIRender.preview();
     };
