@@ -65,11 +65,11 @@
     // Duration
     const res = window.RatesEngine.compute(st);
     const calcDur = res.projectDuration || 0;
-    st.calculatedDurationMonths = calcDur; // numeric stored
+
     $("durationBreakdownOut").innerHTML = renderBreakdown(res);
     $("calcDurationOut").textContent = fmt(calcDur);
 
-    // Warning if calculated > required
+    // Warning
     const req = parseFloat(st.durationMonths);
     if (req > 0 && Number.isFinite(calcDur) && calcDur > req) {
       $("durationWarn").textContent =
@@ -79,18 +79,30 @@
       $("durationWarn").style.display = "none";
     }
 
-    // Pricing (based on team roles + duration)
+    // Pricing (robust + safe)
+    const pricingHost = document.getElementById("pricingOut");
+    if (!pricingHost) return;
+
     if (st.avgManHourCost == null || st.avgManHourCost === "") st.avgManHourCost = 5.00;
 
-    const pricing = window.PricingEngine.compute(team.roles, calcDur, st.avgManHourCost);
-    $("pricingOut").innerHTML = window.UIPricing.render(pricing);
+    try {
+      if (!window.PricingEngine || !window.UIPricing) {
+        pricingHost.innerHTML = `<div class="muted">Pricing modules not loaded.</div>`;
+        return;
+      }
 
-    const avg = document.getElementById("avgManHourCost");
-    if (avg) {
-      avg.oninput = (e) => {
-        st.avgManHourCost = e.target.value;
-        window.UIRender.preview();
-      };
+      const pricing = window.PricingEngine.compute(team.roles, calcDur, st.avgManHourCost);
+      pricingHost.innerHTML = window.UIPricing.render(pricing);
+
+      const avg = document.getElementById("avgManHourCost");
+      if (avg) {
+        avg.oninput = (e) => {
+          st.avgManHourCost = e.target.value;
+          window.UIRender.preview();
+        };
+      }
+    } catch (err) {
+      pricingHost.innerHTML = `<div class="warnText">Pricing Error: ${esc(err && err.message ? err.message : String(err))}</div>`;
     }
   }
 
