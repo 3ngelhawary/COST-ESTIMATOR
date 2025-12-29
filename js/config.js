@@ -21,7 +21,8 @@ window.APP_CONFIG = {
     dry: ["Low Voltage", "Medium Voltage", "High Voltage", "ICA", "ICT"]
   },
   mepSystems: ["Lighting","HVAC","Chiller","Plumbing","Firefighting","Power","Data cabling","CCTV","Telephone","BMS"],
-  landscapeItems: ["Master Planning","Secondary Irrigation","Sub-Soil Drainage"]
+  facilityTypes: ["Tank","Sump","Chamber","Building"],
+  roadLandscapeItems: ["Master Planning","Roads","Secondary Irrigation","Sub-Soil Drainage"]
 };
 
 window.DEFAULT_STATE = {
@@ -30,18 +31,10 @@ window.DEFAULT_STATE = {
   durationMonths: "",
   drawingScale: "1:1000",
   bimRequired: false,
-
   lengthOverride: false,
   projectLengthManual: "",
-
   requiredDetails: { concept:false, schematic:false, detail:false, shop:false, asbuilt:false },
-
   disciplines: { wet:{}, dry:{} },
-
-  general: {
-    architecture: { facilityCount: 0, facilities: [] },
-    structure: { facilityCount: 0, facilities: [] },
-    mep: { systems: {} },
-    landscape: { items: {} }
-  }
+  roadLandscape: { items:{} },
+  facilities: []
 };
