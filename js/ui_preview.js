@@ -49,7 +49,7 @@
     const len = window.UIInputs.effectiveLength(st);
     $("lengthOut").textContent = len ? fmt(len) : "—";
 
-    // ✅ Team Structure (editable; persists via teamOverrides)
+    // Team Structure
     const team = window.TeamModel.build(st);
     $("teamOut").innerHTML = window.UITeam.render(team);
 
@@ -62,14 +62,14 @@
       window.UIRender.preview();
     };
 
-    // ✅ Duration (based on rates + selected phases + selected disciplines + team structure engineers)
+    // Duration
     const res = window.RatesEngine.compute(st);
     const calcDur = res.projectDuration || 0;
-
+    st.calculatedDurationMonths = calcDur; // numeric stored
     $("durationBreakdownOut").innerHTML = renderBreakdown(res);
     $("calcDurationOut").textContent = fmt(calcDur);
 
-    // ✅ Warning if calculated > required
+    // Warning if calculated > required
     const req = parseFloat(st.durationMonths);
     if (req > 0 && Number.isFinite(calcDur) && calcDur > req) {
       $("durationWarn").textContent =
@@ -77,6 +77,20 @@
       $("durationWarn").style.display = "block";
     } else {
       $("durationWarn").style.display = "none";
+    }
+
+    // Pricing (based on team roles + duration)
+    if (st.avgManHourCost == null || st.avgManHourCost === "") st.avgManHourCost = 5.00;
+
+    const pricing = window.PricingEngine.compute(team.roles, calcDur, st.avgManHourCost);
+    $("pricingOut").innerHTML = window.UIPricing.render(pricing);
+
+    const avg = document.getElementById("avgManHourCost");
+    if (avg) {
+      avg.oninput = (e) => {
+        st.avgManHourCost = e.target.value;
+        window.UIRender.preview();
+      };
     }
   }
 
