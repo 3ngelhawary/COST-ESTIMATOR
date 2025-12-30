@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/base.css?v=18" />
-  <link rel="stylesheet" href="css/forms.css?v=18" />
-  <link rel="stylesheet" href="css/output.css?v=18" />
-  <link rel="stylesheet" href="css/modal.css?v=18" />
+  <link rel="stylesheet" href="css/base.css?v=19" />
+  <link rel="stylesheet" href="css/forms.css?v=19" />
+  <link rel="stylesheet" href="css/output.css?v=19" />
+  <link rel="stylesheet" href="css/modal.css?v=19" />
 </head>
 <body>
 
@@ -21,12 +21,14 @@
 <main class="container">
   <div class="layout" style="grid-template-columns: 1fr 1fr 1fr;">
 
-    <section class="card">
+    <!-- Window 1 -->
+    <section class="card card-input">
       <h2 class="cardTitle">Project Data Input</h2>
       <div id="inputs"></div>
     </section>
 
-    <section class="card">
+    <!-- Window 2 -->
+    <section class="card card-output">
       <h2 class="cardTitle">Output Data</h2>
 
       <div class="kpis">
@@ -48,27 +50,37 @@
 
       <div class="divider"></div>
 
-      <div class="groupTitle"><h3>Estimated Drawing Quantities</h3></div>
-      <div class="smallNote">
-        Plans: A1 sheets with 30% F.O.S (70% usable). Facilities are always counted at scale <b>1:100</b>.
+      <!-- Section: Drawings -->
+      <div class="section section-drawings">
+        <div class="groupTitle"><h3>Estimated Drawing Quantities</h3></div>
+        <div class="smallNote">
+          Plans: A1 sheets with 30% F.O.S (70% usable). Facilities are always counted at scale <b>1:100</b>.
+        </div>
+        <div id="drawingsOut"></div>
       </div>
-      <div id="drawingsOut"></div>
 
       <div class="divider"></div>
 
-      <div class="groupTitle"><h3>Duration Breakdown</h3></div>
-      <div class="smallNote">Duration is calculated from your Project Team Structure + selected phases + selected disciplines.</div>
-      <div id="durationBreakdownOut"></div>
-      <div id="durationWarn" class="warnText" style="display:none;margin-top:10px;"></div>
+      <!-- Section: Duration -->
+      <div class="section section-duration">
+        <div class="groupTitle"><h3>Duration Breakdown</h3></div>
+        <div class="smallNote">Duration is calculated from your Project Team Structure + selected phases + selected disciplines.</div>
+        <div id="durationBreakdownOut"></div>
+        <div id="durationWarn" class="warnText" style="display:none;margin-top:10px;"></div>
+      </div>
 
       <div class="divider"></div>
 
-      <div class="groupTitle"><h3>Project Team Structure</h3></div>
-      <div class="smallNote">Change staff numbers here. Duration updates automatically.</div>
-      <div id="teamOut"></div>
+      <!-- Section: Team -->
+      <div class="section section-team">
+        <div class="groupTitle"><h3>Project Team Structure</h3></div>
+        <div class="smallNote">Change staff numbers here. Duration updates automatically.</div>
+        <div id="teamOut"></div>
+      </div>
     </section>
 
-    <section class="card">
+    <!-- Window 3 -->
+    <section class="card card-pricing">
       <h2 class="cardTitle">Pricing (Break Down)</h2>
       <div id="pricingOut"></div>
     </section>
@@ -80,30 +92,30 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=18"></script>
-<script src="js/calculator.js?v=18"></script>
+<script src="js/config.js?v=19"></script>
+<script src="js/calculator.js?v=19"></script>
 
-<script src="js/state.js?v=18"></script>
-<script src="js/ui_helpers.js?v=18"></script>
-<script src="js/ui_modal.js?v=18"></script>
-<script src="js/ui_facilityinfo.js?v=18"></script>
+<script src="js/state.js?v=19"></script>
+<script src="js/ui_helpers.js?v=19"></script>
+<script src="js/ui_modal.js?v=19"></script>
+<script src="js/ui_facilityinfo.js?v=19"></script>
 
-<script src="js/team_model.js?v=18"></script>
-<script src="js/ui_team.js?v=18"></script>
+<script src="js/team_model.js?v=19"></script>
+<script src="js/ui_team.js?v=19"></script>
 
-<script src="js/rates_data.js?v=18"></script>
-<script src="js/rates_engine.js?v=18"></script>
+<script src="js/rates_data.js?v=19"></script>
+<script src="js/rates_engine.js?v=19"></script>
 
-<script src="js/drawings_engine.js?v=18"></script>
-<script src="js/ui_drawings.js?v=18"></script>
+<script src="js/drawings_engine.js?v=19"></script>
+<script src="js/ui_drawings.js?v=19"></script>
 
-<script src="js/pricing_engine.js?v=18"></script>
-<script src="js/ui_pricing.js?v=18"></script>
+<script src="js/pricing_engine.js?v=19"></script>
+<script src="js/ui_pricing.js?v=19"></script>
 
-<script src="js/ui_inputs.js?v=18"></script>
-<script src="js/ui_preview.js?v=18"></script>
-<script src="js/ui_render.js?v=18"></script>
-<script src="js/ui_main.js?v=18"></script>
+<script src="js/ui_inputs.js?v=19"></script>
+<script src="js/ui_preview.js?v=19"></script>
+<script src="js/ui_render.js?v=19"></script>
+<script src="js/ui_main.js?v=19"></script>
 
 </body>
 </html>
