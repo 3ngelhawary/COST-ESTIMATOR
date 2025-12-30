@@ -1,7 +1,34 @@
 /* File: css/output.css */
-.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.kpi{border:1px solid var(--line);border-radius:12px;padding:12px;background:#0b1330}
-.kpiLabel{font-size:12px;color:var(--muted)}
-.kpiValue{font-size:16px;font-weight:700;margin-top:4px}
-.smallLabel{font-size:12px;color:var(--muted);margin-bottom:6px}
-.codebox{margin:0;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0b1330;overflow:auto;min-height:240px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace;font-size:12px}
+
+/* ===== Window (3 cards) color accents ===== */
+.card-input  { border-left: 6px solid #22c55e; }  /* green */
+.card-output { border-left: 6px solid #3b82f6; }  /* blue  */
+.card-pricing{ border-left: 6px solid #f59e0b; }  /* amber */
+
+/* Optional: soft header highlight */
+.card-input  .cardTitle { color: #86efac; }
+.card-output .cardTitle { color: #93c5fd; }
+.card-pricing .cardTitle{ color: #fcd34d; }
+
+/* ===== Output sections (inside Output Data) ===== */
+.section {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Each section different color */
+.section-drawings {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.section-duration {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.section-team {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
