@@ -33,10 +33,10 @@
     };
 
     return {
-      wet: onAny(st.disciplines?.wet),
-      dry: onAny(st.disciplines?.dry),
+      wetCount: Object.values(st.disciplines?.wet || {}).filter(v => v === true).length,
+      dryCount: Object.values(st.disciplines?.dry || {}).filter(v => v === true).length,
       roads: rl["Roads"] === true,
-      landscape: ["Master Planning", "Sub-Soil Drainage"].some(k => rl[k] === true),
+      landscapeCount: ["Master Planning", "Sub-Soil Drainage"].filter(k => rl[k] === true).length,
       secIrr: rl["Secondary Irrigation"] === true,
       arch: fac.some(r => r.doArch),
       str: fac.some(r => r.doStruct),
@@ -47,8 +47,7 @@
 
   function draftsPerDiscipline(st) {
     const area = f(st.projectAreaSqm, 0);
-    const n = area > 0 ? Math.ceil(area / 100000) : 0;
-    return n;
+    return area > 0 ? Math.ceil(area / 100000) : 0;
   }
 
   function ensureOverrides(st) {
@@ -79,53 +78,45 @@
     add("Project Coordinator", 1);
     if (st.bimRequired) add("BIM Manager", 1);
 
-    if (A.wet) {
+    // ✅ Wet Utilities: 1 Senior + 1 Junior per sub-discipline
+    if (A.wetCount > 0) {
       add("Senior – Wet Utilities", 1);
-      add("Junior – Wet Utilities", 1);
+      Object.entries(st.disciplines?.wet || {}).forEach(([k, v]) => {
+        if (v === true) add(`Junior – Wet Utilities – ${k}`, 1);
+      });
       add("Draftsman – Wet Utilities", dft);
     }
 
-    if (A.dry) {
+    // ✅ Dry Utilities: 1 Senior + 1 Junior per sub-discipline
+    if (A.dryCount > 0) {
       add("Senior – Dry Utilities", 1);
-      add("Junior – Dry Utilities", 1);
+      Object.entries(st.disciplines?.dry || {}).forEach(([k, v]) => {
+        if (v === true) add(`Junior – Dry Utilities – ${k}`, 1);
+      });
       add("Draftsman – Dry Utilities", dft);
     }
 
-    if (A.roads) {
-      add("Senior – Roads", 1);
-      add("Junior – Roads", 1);
-      add("Draftsman – Roads", dft);
+    // ✅ Roads/Landscape: 1 Senior per main + 1 Junior per active item
+    if (A.roads || A.landscapeCount > 0 || A.secIrr) {
+      add("Senior – Road/Landscape", 1);
+
+      const rl = st.roadLandscape?.items || {};
+      ["Roads", "Master Planning", "Sub-Soil Drainage", "Secondary Irrigation"].forEach(item => {
+        if (rl[item] === true) add(`Junior – Road/Landscape – ${item}`, 1);
+      });
+
+      add("Draftsman – Road/Landscape", dft);
     }
 
-    if (A.landscape) {
-      add("Senior – Landscape", 1);
-      add("Junior – Landscape", 1);
-      add("Draftsman – Landscape", dft);
-    }
-
-    if (A.secIrr) {
-      add("Senior – Secondary Irrigation", 1);
-      add("Junior – Secondary Irrigation", 1);
-      add("Draftsman – Secondary Irrigation", dft);
-    }
-
-    if (A.arch) {
-      add("Senior – Architecture", 1);
-      add("Junior – Architecture", 1);
-      add("Draftsman – Architecture", dft);
-    }
-
-    if (A.str) {
-      add("Senior – Structure", 1);
-      add("Junior – Structure", 1);
-      add("Draftsman – Structure", dft);
-    }
+    // Facilities-based
+    if (A.arch) { add("Senior – Architecture", 1); add("Junior – Architecture", 1); add("Draftsman – Architecture", dft); }
+    if (A.str)  { add("Senior – Structure", 1); add("Junior – Structure", 1); add("Draftsman – Structure", dft); }
 
     if (A.mepAny) {
       add("Senior – MEP", 1);
       if (A.mepActive.mech) add("Junior – MEP - Mechanical", 1);
       if (A.mepActive.elec) add("Junior – MEP - Electrical", 1);
-      if (A.mepActive.ict) add("Junior – MEP - ICA/ICT", 1);
+      if (A.mepActive.ict)  add("Junior – MEP - ICA/ICT", 1);
       if (A.mepActive.plum) add("Junior – MEP - Plumbing", 1);
       add("Draftsman – MEP", dft);
     }
@@ -134,28 +125,44 @@
   }
 
   // ✅ Duration uses only totals from Project Team Structure.
-  // ✅ Critical fix: if a discipline is active but totals are 0 (not yet initialized), assume 1 engineer.
   function engineersFor(st, key) {
     const pick = (r) => qty(st, r, 0);
-    let total = 0;
 
-    if (key === "wet") total = pick("Senior – Wet Utilities") + pick("Junior – Wet Utilities");
-    else if (key === "dry") total = pick("Senior – Dry Utilities") + pick("Junior – Dry Utilities");
-    else if (key === "roads") total = pick("Senior – Roads") + pick("Junior – Roads");
-    else if (key === "landscape") total = pick("Senior – Landscape") + pick("Junior – Landscape");
-    else if (key === "secIrr") total = pick("Senior – Secondary Irrigation") + pick("Junior – Secondary Irrigation");
-    else if (key === "arch") total = pick("Senior – Architecture") + pick("Junior – Architecture");
-    else if (key === "str") total = pick("Senior – Structure") + pick("Junior – Structure");
-    else if (key === "mep") {
-      total =
+    if (key === "wet") {
+      let t = pick("Senior – Wet Utilities");
+      Object.entries(st.disciplines?.wet || {}).forEach(([k, v]) => { if (v === true) t += pick(`Junior – Wet Utilities – ${k}`); });
+      return t > 0 ? t : 1;
+    }
+
+    if (key === "dry") {
+      let t = pick("Senior – Dry Utilities");
+      Object.entries(st.disciplines?.dry || {}).forEach(([k, v]) => { if (v === true) t += pick(`Junior – Dry Utilities – ${k}`); });
+      return t > 0 ? t : 1;
+    }
+
+    if (key === "roads" || key === "landscape" || key === "secIrr") {
+      let t = pick("Senior – Road/Landscape");
+      const rl = st.roadLandscape?.items || {};
+      ["Roads", "Master Planning", "Sub-Soil Drainage", "Secondary Irrigation"].forEach(item => {
+        if (rl[item] === true) t += pick(`Junior – Road/Landscape – ${item}`);
+      });
+      return t > 0 ? t : 1;
+    }
+
+    if (key === "arch") return (pick("Senior – Architecture") + pick("Junior – Architecture")) || 1;
+    if (key === "str")  return (pick("Senior – Structure") + pick("Junior – Structure")) || 1;
+
+    if (key === "mep") {
+      const t =
         pick("Senior – MEP") +
         pick("Junior – MEP - Mechanical") +
         pick("Junior – MEP - Electrical") +
         pick("Junior – MEP - ICA/ICT") +
         pick("Junior – MEP - Plumbing");
+      return t > 0 ? t : 1;
     }
 
-    return total > 0 ? total : 1;
+    return 1;
   }
 
   window.TeamModel = { build, setQty, engineersFor, getActive };
