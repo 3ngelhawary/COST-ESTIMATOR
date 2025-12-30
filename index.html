@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/base.css?v=20" />
-  <link rel="stylesheet" href="css/forms.css?v=20" />
-  <link rel="stylesheet" href="css/output.css?v=20" />
-  <link rel="stylesheet" href="css/modal.css?v=20" />
+  <link rel="stylesheet" href="css/base.css?v=21" />
+  <link rel="stylesheet" href="css/forms.css?v=21" />
+  <link rel="stylesheet" href="css/output.css?v=21" />
+  <link rel="stylesheet" href="css/modal.css?v=21" />
 </head>
 <body>
 
@@ -48,16 +48,16 @@
 
       <div class="divider"></div>
 
-      <div class="section section-drawings">
-        <div class="groupTitle"><h3>Estimated Drawing Quantities</h3></div>
-        <div class="smallNote">
-          Plans: A1 sheets with 30% F.O.S (70% usable). Facilities are always counted at scale <b>1:100</b>.
-        </div>
-        <div id="drawingsOut"></div>
+      <!-- 1) Project Team Structure -->
+      <div class="section section-team">
+        <div class="groupTitle"><h3>Project Team Structure</h3></div>
+        <div class="smallNote">Change staff numbers here. Duration updates automatically.</div>
+        <div id="teamOut"></div>
       </div>
 
       <div class="divider"></div>
 
+      <!-- 2) Duration Breakdown -->
       <div class="section section-duration">
         <div class="groupTitle"><h3>Duration Breakdown</h3></div>
         <div class="smallNote">Duration is calculated from your Project Team Structure + selected phases + selected disciplines.</div>
@@ -67,10 +67,13 @@
 
       <div class="divider"></div>
 
-      <div class="section section-team">
-        <div class="groupTitle"><h3>Project Team Structure</h3></div>
-        <div class="smallNote">Change staff numbers here. Duration updates automatically.</div>
-        <div id="teamOut"></div>
+      <!-- 3) Estimated Drawing Quantities -->
+      <div class="section section-drawings">
+        <div class="groupTitle"><h3>Estimated Drawing Quantities</h3></div>
+        <div class="smallNote">
+          Plans: A1 sheets with 30% F.O.S (70% usable). Facilities are always counted at scale <b>1:100</b>.
+        </div>
+        <div id="drawingsOut"></div>
       </div>
     </section>
 
@@ -86,33 +89,32 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=20"></script>
-<script src="js/calculator.js?v=20"></script>
+<script src="js/config.js?v=21"></script>
+<script src="js/calculator.js?v=21"></script>
 
-<script src="js/state.js?v=20"></script>
-<script src="js/ui_helpers.js?v=20"></script>
-<script src="js/ui_modal.js?v=20"></script>
-<script src="js/ui_facilityinfo.js?v=20"></script>
+<script src="js/state.js?v=21"></script>
+<script src="js/ui_helpers.js?v=21"></script>
+<script src="js/ui_modal.js?v=21"></script>
+<script src="js/ui_facilityinfo.js?v=21"></script>
 
-<script src="js/team_model.js?v=20"></script>
-<script src="js/ui_team.js?v=20"></script>
+<script src="js/team_model.js?v=21"></script>
+<script src="js/ui_team.js?v=21"></script>
 
-<script src="js/rates_data.js?v=20"></script>
-<script src="js/rates_engine.js?v=20"></script>
+<script src="js/rates_data.js?v=21"></script>
+<script src="js/rates_engine.js?v=21"></script>
 
-<script src="js/drawings_engine.js?v=20"></script>
-<script src="js/ui_drawings.js?v=20"></script>
+<script src="js/drawings_engine.js?v=21"></script>
+<script src="js/ui_drawings.js?v=21"></script>
 
-<script src="js/pricing_engine.js?v=20"></script>
-<script src="js/ui_pricing.js?v=20"></script>
+<script src="js/pricing_engine.js?v=21"></script>
+<script src="js/ui_pricing.js?v=21"></script>
 
-<!-- ✅ NEW: auto-increase juniors if calculated duration > 10 months -->
-<script src="js/auto_staff.js?v=20"></script>
+<script src="js/auto_staff.js?v=21"></script>
 
-<script src="js/ui_inputs.js?v=20"></script>
-<script src="js/ui_preview.js?v=20"></script>
-<script src="js/ui_render.js?v=20"></script>
-<script src="js/ui_main.js?v=20"></script>
+<script src="js/ui_inputs.js?v=21"></script>
+<script src="js/ui_preview.js?v=21"></script>
+<script src="js/ui_render.js?v=21"></script>
+<script src="js/ui_main.js?v=21"></script>
 
 </body>
 </html>
