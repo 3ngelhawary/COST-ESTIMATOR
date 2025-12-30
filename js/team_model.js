@@ -10,6 +10,23 @@
     plum: ["plumbing"]
   };
 
+  function ensureOverrides(st) {
+    if (!st.teamOverrides) st.teamOverrides = {};
+    return st.teamOverrides;
+  }
+
+  function qty(st, role, def) {
+    const ov = ensureOverrides(st);
+    const v = ov[role];
+    const n = parseInt(v ?? def, 10);
+    return Number.isFinite(n) ? Math.max(0, n) : Math.max(0, def);
+  }
+
+  function setQty(st, role, val) {
+    const ov = ensureOverrides(st);
+    ov[role] = Math.max(0, parseInt(val || "0", 10) || 0);
+  }
+
   const onAny = (m) => m && Object.values(m).some(v => v === true);
 
   function getActive(st) {
@@ -50,35 +67,31 @@
     return area > 0 ? Math.ceil(area / 100000) : 0;
   }
 
-  function ensureOverrides(st) {
-    if (!st.teamOverrides) st.teamOverrides = {};
-    return st.teamOverrides;
-  }
-
-  function qty(st, role, def) {
-    const ov = ensureOverrides(st);
-    const v = ov[role];
-    const n = parseInt(v ?? def, 10);
-    return Number.isFinite(n) ? Math.max(0, n) : Math.max(0, def);
-  }
-
-  function setQty(st, role, val) {
-    const ov = ensureOverrides(st);
-    ov[role] = Math.max(0, parseInt(val || "0", 10) || 0);
-  }
-
   function build(st) {
     const A = getActive(st);
     const dft = draftsPerDiscipline(st);
+    const ov = ensureOverrides(st);
+
+    // auto junior level (1,2,3...) used only as DEFAULT proposal (user overrides stay)
+    const juniorLevel = Math.max(1, parseInt(st.autoJuniorLevel || 1, 10) || 1);
 
     const roles = [];
-    const add = (role, def) => roles.push({ role, qty: qty(st, role, def) });
+    const add = (role, def) => {
+      // apply auto-level to ALL junior roles as default proposal
+      let d = def;
+      if (role.startsWith("Junior –")) d = def * juniorLevel;
+
+      // ✅ seed defaults into overrides ONLY if not set (so duration uses initial proposal)
+      if (ov[role] === undefined) ov[role] = d;
+
+      roles.push({ role, qty: qty(st, role, d) });
+    };
 
     add("Project Manager", 1);
     add("Project Coordinator", 1);
     if (st.bimRequired) add("BIM Manager", 1);
 
-    // ✅ Wet Utilities: 1 Senior + 1 Junior per sub-discipline
+    // Wet Utilities: 1 Senior + 1 Junior per sub-discipline
     if (A.wetCount > 0) {
       add("Senior – Wet Utilities", 1);
       Object.entries(st.disciplines?.wet || {}).forEach(([k, v]) => {
@@ -87,7 +100,7 @@
       add("Draftsman – Wet Utilities", dft);
     }
 
-    // ✅ Dry Utilities: 1 Senior + 1 Junior per sub-discipline
+    // Dry Utilities: 1 Senior + 1 Junior per sub-discipline
     if (A.dryCount > 0) {
       add("Senior – Dry Utilities", 1);
       Object.entries(st.disciplines?.dry || {}).forEach(([k, v]) => {
@@ -96,15 +109,13 @@
       add("Draftsman – Dry Utilities", dft);
     }
 
-    // ✅ Roads/Landscape: 1 Senior per main + 1 Junior per active item
+    // Road/Landscape: 1 Senior + 1 Junior per active item
     if (A.roads || A.landscapeCount > 0 || A.secIrr) {
       add("Senior – Road/Landscape", 1);
-
       const rl = st.roadLandscape?.items || {};
       ["Roads", "Master Planning", "Sub-Soil Drainage", "Secondary Irrigation"].forEach(item => {
         if (rl[item] === true) add(`Junior – Road/Landscape – ${item}`, 1);
       });
-
       add("Draftsman – Road/Landscape", dft);
     }
 
@@ -121,10 +132,10 @@
       add("Draftsman – MEP", dft);
     }
 
-    return { roles, active: A, draftsPerDiscipline: dft };
+    return { roles, active: A, draftsPerDiscipline: dft, juniorLevel };
   }
 
-  // ✅ Duration uses only totals from Project Team Structure.
+  // Duration uses totals from overrides (seeded by build), and updates when user edits team table
   function engineersFor(st, key) {
     const pick = (r) => qty(st, r, 0);
 
