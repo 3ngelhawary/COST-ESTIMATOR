@@ -79,7 +79,14 @@
       $("durationWarn").style.display = "none";
     }
 
-    // Pricing (robust + safe)
+    // ✅ Estimated Drawing Quantities
+    const dHost = document.getElementById("drawingsOut");
+    if (dHost && window.DrawingsEngine && window.UIDrawings) {
+      const dm = window.DrawingsEngine.compute(st);
+      dHost.innerHTML = window.UIDrawings.render(dm);
+    }
+
+    // Pricing
     const pricingHost = document.getElementById("pricingOut");
     if (!pricingHost) return;
 
