@@ -5,10 +5,10 @@
   <meta charset="utf-8" />
   <title>Design Cost Estimator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/base.css?v=17" />
-  <link rel="stylesheet" href="css/forms.css?v=17" />
-  <link rel="stylesheet" href="css/output.css?v=17" />
-  <link rel="stylesheet" href="css/modal.css?v=17" />
+  <link rel="stylesheet" href="css/base.css?v=18" />
+  <link rel="stylesheet" href="css/forms.css?v=18" />
+  <link rel="stylesheet" href="css/output.css?v=18" />
+  <link rel="stylesheet" href="css/modal.css?v=18" />
 </head>
 <body>
 
@@ -48,6 +48,14 @@
 
       <div class="divider"></div>
 
+      <div class="groupTitle"><h3>Estimated Drawing Quantities</h3></div>
+      <div class="smallNote">
+        Plans: A1 sheets with 30% F.O.S (70% usable). Facilities are always counted at scale <b>1:100</b>.
+      </div>
+      <div id="drawingsOut"></div>
+
+      <div class="divider"></div>
+
       <div class="groupTitle"><h3>Duration Breakdown</h3></div>
       <div class="smallNote">Duration is calculated from your Project Team Structure + selected phases + selected disciplines.</div>
       <div id="durationBreakdownOut"></div>
@@ -72,27 +80,30 @@
   <div class="container">© 2025 • Design Cost Estimator</div>
 </footer>
 
-<script src="js/config.js?v=17"></script>
-<script src="js/calculator.js?v=17"></script>
+<script src="js/config.js?v=18"></script>
+<script src="js/calculator.js?v=18"></script>
 
-<script src="js/state.js?v=17"></script>
-<script src="js/ui_helpers.js?v=17"></script>
-<script src="js/ui_modal.js?v=17"></script>
-<script src="js/ui_facilityinfo.js?v=17"></script>
+<script src="js/state.js?v=18"></script>
+<script src="js/ui_helpers.js?v=18"></script>
+<script src="js/ui_modal.js?v=18"></script>
+<script src="js/ui_facilityinfo.js?v=18"></script>
 
-<script src="js/team_model.js?v=17"></script>
-<script src="js/ui_team.js?v=17"></script>
+<script src="js/team_model.js?v=18"></script>
+<script src="js/ui_team.js?v=18"></script>
 
-<script src="js/rates_data.js?v=17"></script>
-<script src="js/rates_engine.js?v=17"></script>
+<script src="js/rates_data.js?v=18"></script>
+<script src="js/rates_engine.js?v=18"></script>
 
-<script src="js/pricing_engine.js?v=17"></script>
-<script src="js/ui_pricing.js?v=17"></script>
+<script src="js/drawings_engine.js?v=18"></script>
+<script src="js/ui_drawings.js?v=18"></script>
 
-<script src="js/ui_inputs.js?v=17"></script>
-<script src="js/ui_preview.js?v=17"></script>
-<script src="js/ui_render.js?v=17"></script>
-<script src="js/ui_main.js?v=17"></script>
+<script src="js/pricing_engine.js?v=18"></script>
+<script src="js/ui_pricing.js?v=18"></script>
+
+<script src="js/ui_inputs.js?v=18"></script>
+<script src="js/ui_preview.js?v=18"></script>
+<script src="js/ui_render.js?v=18"></script>
+<script src="js/ui_main.js?v=18"></script>
 
 </body>
 </html>
