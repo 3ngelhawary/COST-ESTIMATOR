@@ -49,7 +49,12 @@
     const len = window.UIInputs.effectiveLength(st);
     $("lengthOut").textContent = len ? fmt(len) : "—";
 
-    // Team Structure
+    // ✅ Auto-increase all juniors until duration <= 10 months (only if user didn't edit juniors)
+    if (window.AutoStaff && window.AutoStaff.applyAutoJunior) {
+      window.AutoStaff.applyAutoJunior(st, 10, 10);
+    }
+
+    // Team Structure (build seeds defaults into overrides)
     const team = window.TeamModel.build(st);
     $("teamOut").innerHTML = window.UITeam.render(team);
 
@@ -79,7 +84,7 @@
       $("durationWarn").style.display = "none";
     }
 
-    // ✅ Estimated Drawing Quantities
+    // Estimated Drawings
     const dHost = document.getElementById("drawingsOut");
     if (dHost && window.DrawingsEngine && window.UIDrawings) {
       const dm = window.DrawingsEngine.compute(st);
