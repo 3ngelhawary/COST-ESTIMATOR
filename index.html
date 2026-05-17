@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Design Cost Estimator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css?v=30" />
+  <link rel="stylesheet" href="css/output.css?v=30" />
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <h1 class="title">Design Cost Estimator</h1>
+  </div>
+</header>
+
+<main class="container">
+  <div class="layout">
+
+    <!-- COLUMN 1: Inputs -->
+    <section class="card card-input">
+      <h2 class="cardTitle">Project Data Input</h2>
+      <div id="inputs"></div>
+    </section>
+
+    <!-- COLUMN 2: Output -->
+    <section class="card card-output">
+      <h2 class="cardTitle">Output Data</h2>
+
+      <div class="kpis" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="kpi">
+          <div class="kpiLabel">Project</div>
+          <div class="kpiValue" id="projectOut">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiLabel">Project Length (m)</div>
+          <div class="kpiValue" id="lengthOut">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpiLabel">Calculated Duration (Months)</div>
+          <div class="kpiValue" id="calcDurationOut">—</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section section-team">
+        <div class="groupTitle"><h3>Project Team Structure</h3></div>
+        <div class="smallNote">Edit staff quantities here — duration updates automatically.</div>
+        <div id="teamOut"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section section-duration">
+        <div class="groupTitle"><h3>Duration Breakdown</h3></div>
+        <div class="smallNote">Each discipline is calculated independently. Project duration = longest (critical path).</div>
+        <div id="durationBreakdownOut"></div>
+        <div id="durationWarn" class="warnText" style="display:none;margin-top:10px;"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section section-drawings">
+        <div class="groupTitle"><h3>Estimated Drawing Quantities</h3></div>
+        <div class="smallNote">Plans: A1 sheets with 30% FOS (70% usable). Facilities always at 1:100.</div>
+        <div id="drawingsOut"></div>
+      </div>
+    </section>
+
+    <!-- COLUMN 3: Pricing -->
+    <section class="card card-pricing">
+      <h2 class="cardTitle">Pricing (Break Down)</h2>
+      <div id="pricingOut"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">© 2025 • Design Cost Estimator</div>
+</footer>
+
+<!-- Load order matters: helpers first, then engines, then UI -->
+<script src="js/config.js?v=30"></script>
+<script src="js/state.js?v=30"></script>
+<script src="js/ui_helpers.js?v=30"></script>
+<script src="js/ui_modal.js?v=30"></script>
+<script src="js/ui_facilityinfo.js?v=30"></script>
+<script src="js/team_model.js?v=30"></script>
+<script src="js/rates_data.js?v=30"></script>
+<script src="js/rates_engine.js?v=30"></script>
+<script src="js/drawings_engine.js?v=30"></script>
+<script src="js/pricing_engine.js?v=30"></script>
+<script src="js/auto_staff.js?v=30"></script>
+<script src="js/ui_inputs.js?v=30"></script>
+<script src="js/ui_team.js?v=30"></script>
+<script src="js/ui_drawings.js?v=30"></script>
+<script src="js/ui_pricing.js?v=30"></script>
+<script src="js/ui_preview.js?v=30"></script>
+<script src="js/ui_render.js?v=30"></script>
+<script src="js/ui_main.js?v=30"></script>
+
+</body>
+</html>
