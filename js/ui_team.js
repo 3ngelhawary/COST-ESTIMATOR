@@ -1,36 +1,27 @@
-// File: js/ui_team.js
+// File: js/ui_team.js v40
 (function () {
   const { esc } = window.UIH;
 
   function render(team) {
-    const rows = team.roles.map(r => `
-      <tr>
-        <td>${esc(r.role)}</td>
-        <td class="tCenter">
-          <input type="number" min="0" step="1" value="${r.qty}"
-                 data-role="${esc(r.role)}"
-                 style="width:72px;text-align:center;padding:4px 6px;">
-        </td>
-      </tr>`).join("");
+    if (!team.roles || !team.roles.length) {
+      return '<div class="empty-state"><div class="es-icon">👥</div>No scope selected yet.</div>';
+    }
+    const rows = team.roles.map(function(r) {
+      return '<tr>' +
+        '<td>' + esc(r.role) + '</td>' +
+        '<td class="tc">' +
+          '<input class="qty-input" type="number" min="0" step="1" ' +
+                 'value="' + r.qty + '" data-role="' + esc(r.role) + '">' +
+        '</td>' +
+      '</tr>';
+    }).join('');
 
-    return `
-      <div class="tableWrap">
-        <table class="tTable">
-          <thead>
-            <tr>
-              <th>Role</th>
-              <th class="tCenter" style="width:100px">Qty</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows || `<tr><td colspan="2" class="tCenter muted" style="padding:12px;">No active scope yet.</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-      <div class="smallNote" style="margin-top:8px;">
-        Draftsman default: 1 per 100,000 m² per discipline group. Edit any quantity above to override.
-      </div>`;
+    return '<div class="table-wrap"><table class="t-table">' +
+      '<thead><tr><th>Role</th><th class="tc" style="width:90px">Qty</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table></div>' +
+    '<div class="field-note" style="margin-top:8px;">Default draftsman: 1 per 100,000 m² per discipline group.</div>';
   }
 
-  window.UITeam = { render };
+  window.UITeam = { render: render };
 })();

@@ -1,83 +1,113 @@
-// File: js/ui_pricing.js
+// File: js/ui_pricing.js v40
 (function () {
   const { esc } = window.UIH;
-  const sym = () => window.APP_CONFIG.currencySymbol;
 
-  function fmt(n) {
-    if (!Number.isFinite(n)) return "0.00";
-    return (Math.round(n * 100) / 100).toLocaleString("en-US", {
-      minimumFractionDigits: 2, maximumFractionDigits: 2
-    });
+  function fmt(n, dec = 2) {
+    if (!Number.isFinite(n)) return '0.00';
+    return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function fmtInt(n) {
+    if (!Number.isFinite(n)) return '0';
+    return Math.round(n).toLocaleString('en-US');
   }
 
-  function render(model) {
-    const s = sym();
+  function render(model, st) {
+    const sym  = st.currencySym || '$';
+    const area = parseFloat(st.projectAreaSqm) || 0;
+    const costPerM2 = area > 0 ? model.grandTotal / area : 0;
+
+    const rows = model.rows.map(r => `
+      <tr>
+        <td>${esc(r.role)}</td>
+        <td class="tc mono">${r.qty}</td>
+        <td class="tc mono">${fmtInt(r.mhPerMonth)}</td>
+        <td class="tc mono">${sym} ${fmt(r.costPerMonth)}</td>
+        <td class="tc mono"><b>${sym} ${fmt(r.total)}</b></td>
+      </tr>`).join('');
+
     return `
-      <div class="field">
-        <label>AVG. Man-Hour Cost (${s}/hr)</label>
-        <input id="avgManHourCost" type="number" min="0" step="0.5" value="${fmt(model.avgManHourCost)}">
-        <div class="smallNote">Each person produces <b>${model.hoursPerPersonPerMonth}</b> billable hrs / month.</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="kpis" style="grid-template-columns:1fr 1fr;">
-        <div class="kpi">
-          <div class="kpiLabel">Total Staff</div>
-          <div class="kpiValue">${model.totalStaff}</div>
+      <!-- ── Rate Inputs ── -->
+      <div class="row2" style="margin-bottom:10px;">
+        <div class="field">
+          <div class="field-label">Man-Hour Rate <span class="field-hint">${sym}/hr</span></div>
+          <input id="avgManHourCost" type="number" min="0" step="0.5" value="${fmt(model.rate)}">
+          <div class="field-note">${model.hoursPerPersonPerMonth} hrs / person / month</div>
         </div>
-        <div class="kpi">
-          <div class="kpiLabel">Project Duration (mo.)</div>
-          <div class="kpiValue">${fmt(model.durationMonths)}</div>
-        </div>
-        <div class="kpi">
-          <div class="kpiLabel">Team Man-Hours / Month</div>
-          <div class="kpiValue">${fmt(model.totalMHMonth)}</div>
-        </div>
-        <div class="kpi">
-          <div class="kpiLabel">Monthly Cost (${s})</div>
-          <div class="kpiValue">${fmt(model.totalCostMonth)}</div>
+        <div class="field">
+          <div class="field-label">Overhead <span class="field-hint">%</span></div>
+          <input id="overheadPct" type="number" min="0" max="100" step="1" value="${fmt(st.overheadPct, 0)}">
+          <div class="field-note">Applied to direct labor cost.</div>
         </div>
       </div>
+      <div class="field" style="margin-bottom:14px;">
+        <div class="field-label">Contingency <span class="field-hint">%</span></div>
+        <input id="contingencyPct" type="number" min="0" max="50" step="1" value="${fmt(st.contingencyPct, 0)}">
+        <div class="field-note">Applied to subtotal (labor + overhead).</div>
+      </div>
 
-      <div class="kpis" style="grid-template-columns:1fr;margin-top:10px;">
-        <div class="kpi" style="border:1px solid rgba(59,130,246,0.4);background:rgba(59,130,246,0.07);">
-          <div class="kpiLabel">Total Project Cost (${s})</div>
-          <div class="kpiValue" style="font-size:22px;">${fmt(model.totalCost)}</div>
+      <!-- ── Cost Hero ── -->
+      <div class="cost-hero">
+        <div class="cost-hero-label">Total Project Cost</div>
+        <div class="cost-hero-amount">${sym} ${fmtInt(model.grandTotal)}</div>
+        <div class="cost-hero-sub">
+          <span class="chip">${model.totalStaff} staff</span>
+          <span class="chip">${fmt(model.durationMonths, 1)} months</span>
+          <span class="chip">${fmtInt(model.totalMHMonth)} MH/mo</span>
         </div>
       </div>
 
-      <div class="divider"></div>
+      ${costPerM2 > 0 ? `
+      <div style="display:flex;justify-content:center;margin-bottom:14px;">
+        <div class="cost-per-sqm">
+          ◈ ${sym} ${fmt(costPerM2)} per m²
+        </div>
+      </div>` : ''}
 
-      <div class="tableWrap">
-        <table class="tTable">
+      <!-- ── Cost Breakdown ── -->
+      <div class="cost-lines">
+        <div class="cost-line">
+          <span>Direct Labor</span>
+          <span class="val">${sym} ${fmtInt(model.directCost)}</span>
+        </div>
+        <div class="cost-line">
+          <span>Overhead (${fmt(st.overheadPct, 0)}%)</span>
+          <span class="val">${sym} ${fmtInt(model.overhead)}</span>
+        </div>
+        <div class="cost-line">
+          <span>Subtotal</span>
+          <span class="val">${sym} ${fmtInt(model.subtotal)}</span>
+        </div>
+        <div class="cost-line">
+          <span>Contingency (${fmt(st.contingencyPct, 0)}%)</span>
+          <span class="val">${sym} ${fmtInt(model.contingency)}</span>
+        </div>
+        <div class="cost-line total-line">
+          <span><b>Grand Total</b></span>
+          <span class="val"><b>${sym} ${fmtInt(model.grandTotal)}</b></span>
+        </div>
+      </div>
+
+      <!-- ── Team Cost Table ── -->
+      <div class="table-wrap">
+        <table class="t-table">
           <thead>
             <tr>
               <th>Role</th>
-              <th class="tCenter" style="width:50px">Qty</th>
-              <th class="tCenter" style="width:100px">MH / Month</th>
-              <th class="tCenter" style="width:110px">${s} / Month</th>
-              <th class="tCenter" style="width:110px">Total ${s}</th>
+              <th class="tc" style="width:44px">Qty</th>
+              <th class="tc" style="width:90px">MH / Month</th>
+              <th class="tc" style="width:110px">${sym} / Month</th>
+              <th class="tc" style="width:110px">Total ${sym}</th>
             </tr>
           </thead>
           <tbody>
-            ${model.rows.length
-              ? model.rows.map(r => `
-                <tr>
-                  <td>${esc(r.role)}</td>
-                  <td class="tCenter">${r.qty}</td>
-                  <td class="tCenter">${fmt(r.mhPerMonth)}</td>
-                  <td class="tCenter">${fmt(r.costPerMonth)}</td>
-                  <td class="tCenter"><b>${fmt(r.total)}</b></td>
-                </tr>`).join("")
-              : `<tr><td colspan="5" class="tCenter muted" style="padding:12px;">No staff in team.</td></tr>`
-            }
+            ${rows || `<tr><td colspan="5"><div class="empty-state">
+              <div class="es-icon">💼</div>No staff assigned yet.
+            </div></td></tr>`}
           </tbody>
         </table>
       </div>
-
-      <div class="smallNote" style="margin-top:10px;">
-        Total = Staff × ${model.hoursPerPersonPerMonth} hrs/month × Rate × Duration
+      <div class="field-note" style="margin-top:10px;">
+        Total = Qty × ${model.hoursPerPersonPerMonth} hrs/mo × Rate × Duration
       </div>`;
   }
 

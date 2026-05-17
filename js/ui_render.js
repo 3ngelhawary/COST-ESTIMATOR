@@ -1,7 +1,7 @@
-// File: js/ui_render.js
+// File: js/ui_render.js v40
 (function () {
   window.UIRender = {
-    renderInputs: () => window.UIInputs.renderInputs(),
-    preview:      () => window.UIPreview.preview()
+    renderInputs: function() { window.UIInputs.renderInputs(); },
+    preview:      function() { window.UIPreview.preview(); }
   };
 })();

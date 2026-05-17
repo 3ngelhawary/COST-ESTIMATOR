@@ -1,79 +1,57 @@
-// File: js/ui_drawings.js
+// File: js/ui_drawings.js v40
 (function () {
   const { esc } = window.UIH;
-  const fmt = (n) => (Number.isFinite(n) ? Math.round(n).toLocaleString() : "0");
+  function fmtInt(n) { return Number.isFinite(n) ? Math.round(n).toLocaleString('en-US') : '0'; }
 
   function render(m) {
-    return `
-      <div class="kpis" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px;">
-        <div class="kpi">
-          <div class="kpiLabel">Scale</div>
-          <div class="kpiValue" style="font-size:14px;">${esc(m.scale)}</div>
-        </div>
-        <div class="kpi">
-          <div class="kpiLabel">Usable / A1 (m²)</div>
-          <div class="kpiValue" style="font-size:14px;">${fmt(m.usableMain)}</div>
-        </div>
-        <div class="kpi">
-          <div class="kpiLabel">Active Discipline Groups</div>
-          <div class="kpiValue" style="font-size:14px;">${m.activeDisciplineGroups}</div>
-        </div>
-      </div>
-
-      <div class="tableWrap">
-        <table class="tTable">
-          <thead>
-            <tr>
-              <th>Drawing Type</th>
-              <th class="tCenter" style="width:200px">Basis</th>
-              <th class="tCenter" style="width:100px">Count</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><b>Plan Sheets</b></td>
-              <td class="tCenter">${m.plansPerGroup} sheets/group × ${m.activeDisciplineGroups} groups</td>
-              <td class="tCenter"><b>${fmt(m.totalPlans)}</b></td>
-            </tr>
-            <tr>
-              <td class="muted" style="padding-left:18px;">— Sheets per group</td>
-              <td class="tCenter">Main @ ${esc(m.scale)} + Facilities @ 1:100</td>
-              <td class="tCenter">${m.plansPerGroup}</td>
-            </tr>
-
-            <tr>
-              <td><b>Profile Sheets</b></td>
-              <td class="tCenter">ceil(Length/1000) × ${m.profileStreams} stream(s)</td>
-              <td class="tCenter"><b>${fmt(m.totalProfiles)}</b></td>
-            </tr>
-            <tr>
-              <td class="muted" style="padding-left:18px;">— Base (per 1000 m)</td>
-              <td class="tCenter">${m.profileBase} base sheets</td>
-              <td class="tCenter"></td>
-            </tr>
-
-            <tr>
-              <td><b>Detail Drawings</b></td>
-              <td class="tCenter">10 per active discipline group</td>
-              <td class="tCenter"><b>${fmt(m.totalDetails)}</b></td>
-            </tr>
-
-            <tr style="background:rgba(255,255,255,0.03);">
-              <td><b>Total Drawings</b></td>
-              <td class="tCenter">Plans + Profiles + Details</td>
-              <td class="tCenter"><b>${fmt(m.totalDrawings)}</b></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      ${m.grid.rows > 0
-        ? `<div class="smallNote" style="margin-top:10px;">
-             Suggested sheet grid (main plan set only):
-             <b>${m.grid.rows} rows × ${m.grid.cols} columns</b>
-           </div>`
-        : ""}`;
+    if (!m.activeDisciplineGroups) {
+      return '<div class="empty-state"><div class="es-icon">📐</div>Select disciplines to estimate drawings.</div>';
+    }
+    return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">' +
+      '<div class="kpi-card kpi-card--blue">' +
+        '<div class="kpi-label">Scale</div>' +
+        '<div class="kpi-value" style="font-size:14px;">' + esc(m.scale) + '</div>' +
+      '</div>' +
+      '<div class="kpi-card kpi-card--teal">' +
+        '<div class="kpi-label">Disc. Groups</div>' +
+        '<div class="kpi-value" style="font-size:18px;">' + m.activeDisciplineGroups + '</div>' +
+      '</div>' +
+      '<div class="kpi-card kpi-card--amber">' +
+        '<div class="kpi-label">Total Sheets</div>' +
+        '<div class="kpi-value mono" style="font-size:18px;">' + fmtInt(m.totalDrawings) + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="table-wrap"><table class="t-table">' +
+      '<thead><tr>' +
+        '<th>Type</th>' +
+        '<th class="tc" style="width:200px">Basis</th>' +
+        '<th class="tc" style="width:80px">Sheets</th>' +
+      '</tr></thead>' +
+      '<tbody>' +
+        '<tr><td><b>Plan Sheets</b></td>' +
+          '<td class="tc">' + m.plansPerGroup + ' / group × ' + m.activeDisciplineGroups + ' groups</td>' +
+          '<td class="tc mono"><b>' + fmtInt(m.totalPlans) + '</b></td></tr>' +
+        '<tr><td style="padding-left:18px;color:var(--text3);">— Per group</td>' +
+          '<td class="tc">Main @ ' + esc(m.scale) + ' + Fac @ 1:100</td>' +
+          '<td class="tc mono">' + m.plansPerGroup + '</td></tr>' +
+        '<tr><td><b>Profile Sheets</b></td>' +
+          '<td class="tc">Base × ' + m.profileStreams + ' stream(s)</td>' +
+          '<td class="tc mono"><b>' + fmtInt(m.totalProfiles) + '</b></td></tr>' +
+        '<tr><td style="padding-left:18px;color:var(--text3);">— Base sheets</td>' +
+          '<td class="tc">' + m.profileBase + ' (per 1,000 m)</td>' +
+          '<td class="tc mono"></td></tr>' +
+        '<tr><td><b>Detail Drawings</b></td>' +
+          '<td class="tc">10 per discipline group</td>' +
+          '<td class="tc mono"><b>' + fmtInt(m.totalDetails) + '</b></td></tr>' +
+        '<tr class="t-total"><td><b>Total</b></td>' +
+          '<td class="tc">Plans + Profiles + Details</td>' +
+          '<td class="tc mono"><b>' + fmtInt(m.totalDrawings) + '</b></td></tr>' +
+      '</tbody>' +
+    '</table></div>' +
+    (m.grid.rows > 0
+      ? '<div class="field-note" style="margin-top:8px;">Suggested sheet grid (main plans): <b>' + m.grid.rows + ' rows × ' + m.grid.cols + ' cols</b></div>'
+      : '');
   }
 
-  window.UIDrawings = { render };
+  window.UIDrawings = { render: render };
 })();

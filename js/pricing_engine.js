@@ -1,45 +1,55 @@
-// File: js/pricing_engine.js
+// File: js/pricing_engine.js v40
 (function () {
   const HOURS_PER_PERSON_PER_MONTH = 200;
 
-  function num(x, d = 0) {
-    const n = parseFloat(String(x ?? "").replace(/,/g, "").trim());
-    return Number.isFinite(n) ? n : d;
+  function num(x, d) {
+    d = d || 0;
+    var n = parseFloat(String(x == null ? '' : x).replace(/,/g, '').trim());
+    return isFinite(n) ? n : d;
   }
 
-  // teamRoles: array of { role, qty }
-  // durationMonths: project duration (calculated, not user input)
-  // avgManHourCost: $/hr
-  function compute(teamRoles, durationMonths, avgManHourCost) {
-    const dur  = Math.max(0, num(durationMonths, 0));
-    const rate = Math.max(0, num(avgManHourCost, 0));
+  function compute(teamRoles, durationMonths, avgManHourCost, overheadPct, contingencyPct) {
+    var dur  = Math.max(0, num(durationMonths, 0));
+    var rate = Math.max(0, num(avgManHourCost, 0));
+    var oPct = Math.max(0, num(overheadPct, 0));
+    var cPct = Math.max(0, num(contingencyPct, 0));
 
-    const rows = (teamRoles || [])
-      .map(r => ({ role: String(r.role ?? "").trim(), qty: Math.max(0, Math.round(num(r.qty, 0))) }))
-      .filter(r => r.role && r.qty > 0)
-      .map(r => {
-        const mhPerMonth   = r.qty * HOURS_PER_PERSON_PER_MONTH;
-        const costPerMonth = mhPerMonth * rate;
-        const total        = costPerMonth * dur;
-        return { ...r, mhPerMonth, costPerMonth, total };
+    var rows = (teamRoles || [])
+      .map(function(r) { return { role: String(r.role || '').trim(), qty: Math.max(0, Math.round(num(r.qty, 0))) }; })
+      .filter(function(r) { return r.role && r.qty > 0; })
+      .map(function(r) {
+        var mhPerMonth   = r.qty * HOURS_PER_PERSON_PER_MONTH;
+        var costPerMonth = mhPerMonth * rate;
+        var total        = costPerMonth * dur;
+        return Object.assign({}, r, { mhPerMonth: mhPerMonth, costPerMonth: costPerMonth, total: total });
       });
 
-    const totalStaff      = rows.reduce((s, r) => s + r.qty,          0);
-    const totalMHMonth    = rows.reduce((s, r) => s + r.mhPerMonth,   0);
-    const totalCostMonth  = rows.reduce((s, r) => s + r.costPerMonth, 0);
-    const totalCost       = rows.reduce((s, r) => s + r.total,        0);
+    var totalStaff     = rows.reduce(function(s,r){return s+r.qty;}, 0);
+    var totalMHMonth   = rows.reduce(function(s,r){return s+r.mhPerMonth;}, 0);
+    var totalCostMonth = rows.reduce(function(s,r){return s+r.costPerMonth;}, 0);
+    var directCost     = rows.reduce(function(s,r){return s+r.total;}, 0);
+    var overhead       = directCost * (oPct / 100);
+    var subtotal       = directCost + overhead;
+    var contingency    = subtotal   * (cPct / 100);
+    var grandTotal     = subtotal   + contingency;
 
     return {
       hoursPerPersonPerMonth: HOURS_PER_PERSON_PER_MONTH,
       durationMonths: dur,
-      avgManHourCost: rate,
-      totalStaff,
-      totalMHMonth,
-      totalCostMonth,
-      totalCost,
-      rows
+      rate: rate,
+      overheadPct: oPct,
+      contingencyPct: cPct,
+      totalStaff: totalStaff,
+      totalMHMonth: totalMHMonth,
+      totalCostMonth: totalCostMonth,
+      directCost: directCost,
+      overhead: overhead,
+      subtotal: subtotal,
+      contingency: contingency,
+      grandTotal: grandTotal,
+      rows: rows
     };
   }
 
-  window.PricingEngine = { compute };
+  window.PricingEngine = { compute: compute };
 })();

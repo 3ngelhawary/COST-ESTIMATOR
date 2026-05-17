@@ -26,22 +26,22 @@
 
     const rows = st.facilities.map((r, idx) => rowHtml(r, idx)).join("");
     const body = `
-      <div class="smallNote" style="margin-bottom:10px;">
+      <div class="field-note" style="margin-bottom:10px;">
         Add / edit facility rows. Tick Structure / Arch / MEP to include in team and pricing.
       </div>
-      <div class="tableWrap">
-        <table class="tTable">
+      <div class="table-wrap">
+        <table class="t-table">
           <thead>
             <tr>
               <th style="width:16%">Type</th>
               <th style="width:12%">Count</th>
               <th style="width:14%">Area / Floor (m²)</th>
               <th style="width:10%">Floors</th>
-              <th style="width:10%" class="tCenter">Structure</th>
-              <th style="width:10%" class="tCenter">Arch</th>
-              <th style="width:10%" class="tCenter">MEP</th>
-              <th style="width:12%" class="tCenter">MEP Items</th>
-              <th style="width:6%"  class="tCenter">Del</th>
+              <th style="width:10%" class="tc">Structure</th>
+              <th style="width:10%" class="tc">Arch</th>
+              <th style="width:10%" class="tc">MEP</th>
+              <th style="width:12%" class="tc">MEP Items</th>
+              <th style="width:6%"  class="tc">Del</th>
             </tr>
           </thead>
           <tbody id="facTbody">
@@ -71,15 +71,15 @@
         <td><input class="tInput" type="number" min="0" step="1" data-c="count"  value="${esc(r.count)}"></td>
         <td><input class="tInput" type="number" min="0" step="1" data-c="area"   value="${esc(r.area)}" placeholder="m²"></td>
         <td><input class="tInput" type="number" min="1" step="1" data-c="floors" value="${esc(r.floors)}"></td>
-        <td class="tCenter"><input type="checkbox" data-c="doStruct" ${r.doStruct ? "checked" : ""}></td>
-        <td class="tCenter"><input type="checkbox" data-c="doArch"   ${r.doArch   ? "checked" : ""}></td>
-        <td class="tCenter"><input type="checkbox" data-c="doMEP"    ${r.doMEP    ? "checked" : ""}></td>
-        <td class="tCenter">
+        <td class="tc"><input type="checkbox" data-c="doStruct" ${r.doStruct ? "checked" : ""}></td>
+        <td class="tc"><input type="checkbox" data-c="doArch"   ${r.doArch   ? "checked" : ""}></td>
+        <td class="tc"><input type="checkbox" data-c="doMEP"    ${r.doMEP    ? "checked" : ""}></td>
+        <td class="tc">
           <button type="button" data-c="mepBtn" ${r.doMEP ? "" : "disabled"}>
             ${mepCount ? mepCount + " selected" : "Select"}
           </button>
         </td>
-        <td class="tCenter">
+        <td class="tc">
           <button type="button" data-c="delBtn" style="color:#f87171;border-color:#f87171;">✕</button>
         </td>
       </tr>`;
@@ -166,7 +166,7 @@
     }).join("");
 
     const body = `
-      <div class="smallNote" style="margin-bottom:10px;">Select MEP systems for this facility row.</div>
+      <div class="field-note" style="margin-bottom:10px;">Select MEP systems for this facility row.</div>
       <div class="checkGrid" id="mepGrid">${checks}</div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
         <button type="button" id="mepDoneBtn">← Back to Facilities</button>
