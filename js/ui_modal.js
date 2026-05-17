@@ -5,7 +5,8 @@
   function ensure() {
     if (document.getElementById("modalOverlay")) return;
     const ov = document.createElement("div");
-    ov.id="modalOverlay"; ov.className="modalOverlay hidden";
+    ov.id = "modalOverlay";
+    ov.className = "modalOverlay hidden";
     ov.innerHTML = `
       <div class="modalCard" role="dialog" aria-modal="true">
         <div class="modalHeader">
@@ -21,8 +22,10 @@
     const close = () => hide();
     $("modalCloseBtn").addEventListener("click", close);
     $("modalCancelBtn").addEventListener("click", close);
-    ov.addEventListener("click",(e)=>{ if(e.target===ov) close(); });
-    document.addEventListener("keydown",(e)=>{ if(e.key==="Escape" && !ov.classList.contains("hidden")) close(); });
+    ov.addEventListener("click", (e) => { if (e.target === ov) close(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !ov.classList.contains("hidden")) close();
+    });
   }
 
   function show(title, html) {

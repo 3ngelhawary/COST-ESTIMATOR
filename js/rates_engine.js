@@ -1,119 +1,122 @@
 // File: js/rates_engine.js
+//
+// HOW DURATION IS CALCULATED (fixes the "more disciplines → lower cost" bug):
+// ============================================================================
+//
+// WRONG old approach:
+//   wet_duration = (km × wetCount) / (rate × totalWetEngineers)
+//   → adding sub-disciplines both multiplied qty AND divided by more engineers,
+//     so duration could stay flat or shrink while cost dropped.
+//
+// CORRECT new approach:
+//   For each sub-discipline independently:
+//     sub_duration = km / (rate × engineers_for_that_sub_disc)
+//   Project duration = max across ALL sub-disciplines (critical path).
+//   Adding a new sub-discipline adds a NEW work stream with its own junior,
+//   so team grows AND the new stream may extend the critical path.
+//   Cost = larger team × duration × rate  → always increases.
+//
 (function () {
   const { f } = window.UIH;
 
-  const isOn = (m) => m && Object.values(m).some(v => v === true);
+  function ratePick(tbl, phaseKey, wf) {
+    if (!tbl) return 0;
+    const k = String(phaseKey || "").toLowerCase();
+    const row = tbl[k];
+    if (row && typeof row[wf] === "number") return row[wf];
+    return 0;
+  }
 
-  const num = (x, d = 0) => {
-    const n = parseFloat(String(x ?? "").replace(/,/g, "").trim());
-    return Number.isFinite(n) ? n : d;
-  };
+  // Duration for ONE work stream: sum over selected phases of (qty / (rate × engineers))
+  // Returns months. If any phase rate is 0 it is skipped (not that phase's scope).
+  function streamDuration(qty, tbl, phases, wf, engineers) {
+    if (!engineers || engineers <= 0 || qty <= 0 || !phases.length) return 0;
+    let months = 0;
+    phases.forEach(p => {
+      const r = ratePick(tbl, p, wf);
+      if (r > 0) months += qty / (r * engineers);
+    });
+    return months;
+  }
 
   function selectedPhases(st) {
     return Object.entries(st.requiredDetails || {})
       .filter(([, v]) => v === true)
-      .map(([k]) => String(k || "").trim().toLowerCase()); // concept/schematic/detail/shop/asbuilt
-  }
-
-  function ratePick(tbl, phaseKey, wf) {
-    if (!tbl) return 0;
-    const k = String(phaseKey || "").trim().toLowerCase();
-
-    // lower-case keys
-    if (tbl[k] && typeof tbl[k][wf] === "number") return tbl[k][wf];
-
-    // title-case keys
-    const titleMap = { concept: "Concept", schematic: "Schematic", detail: "Detailed", shop: "Shop", asbuilt: "As-Built" };
-    const t = titleMap[k];
-    if (t && tbl[t] && typeof tbl[t][wf] === "number") return tbl[t][wf];
-
-    // alt
-    if (k === "asbuilt" && tbl["AsBuilt"] && typeof tbl["AsBuilt"][wf] === "number") return tbl["AsBuilt"][wf];
-    return 0;
-  }
-
-  function facilitiesAreaM2(st) {
-    let a = 0;
-    (st.facilities || []).forEach(r => {
-      a += num(r.count, 0) * num(r.floors, 1) * num(r.area, 0);
-    });
-    return a;
-  }
-
-  function counts(st) {
-    const wetCount = Object.values(st.disciplines?.wet || {}).filter(v => v === true).length;
-    const dryCount = Object.values(st.disciplines?.dry || {}).filter(v => v === true).length;
-
-    const rl = st.roadLandscape?.items || {};
-    const roadsCount = rl["Roads"] === true ? 1 : 0;
-    const landscapeCount = ["Master Planning", "Sub-Soil Drainage"].filter(k => rl[k] === true).length;
-
-    return { wetCount, dryCount, roadsCount, landscapeCount };
-  }
-
-  function quantities(st) {
-    const lenM = window.UIInputs.effectiveLength(st);
-    const areaM2 = f(st.projectAreaSqm, 0);
-
-    return {
-      km: f(lenM, 0) / 1000,
-      ha: areaM2 / 10000,
-      greenHa: (areaM2 * 0.35) / 10000,
-      facilitiesM2: facilitiesAreaM2(st)
-    };
-  }
-
-  function durOne(qty, tbl, phases, wf, eng) {
-    if (!eng || eng <= 0) return Infinity;
-    let sum = 0;
-    phases.forEach(p => {
-      const r = ratePick(tbl, p, wf);
-      if (r > 0) sum += qty / (r * eng);
-    });
-    return sum;
+      .map(([k]) => k.toLowerCase());
   }
 
   function compute(st) {
-    const wf = st.bimRequired ? "bim" : "cad";
+    const wf     = st.bimRequired ? "bim" : "cad";
     const phases = selectedPhases(st);
-    const Q = quantities(st);
-    const C = counts(st);
 
+    const lenM   = window.UIInputs.effectiveLength(st);
+    const km     = f(lenM, 0) / 1000;
+    const areaM2 = f(st.projectAreaSqm, 0);
+    const ha     = areaM2 / 10000;
+    const greenHa = (areaM2 * 0.35) / 10000;
+    const facM2   = window.UIFacilityInfo.totalFacilityAreaM2(st);
+
+    const A  = window.TeamModel.getActive(st);
     const rl = st.roadLandscape?.items || {};
-    const fac = st.facilities || [];
-
-    const active = {
-      wet: C.wetCount > 0,
-      dry: C.dryCount > 0,
-      roads: C.roadsCount > 0,
-      landscape: C.landscapeCount > 0,
-      secIrr: rl["Secondary Irrigation"] === true,
-      arch: fac.some(r => r.doArch),
-      str: fac.some(r => r.doStruct),
-      mep: window.TeamModel.getActive(st).mepAny
-    };
-
     const rows = [];
-    const add = (key, label, qty, tbl) => {
-      if (!active[key] || !phases.length) return;
-      const eng = window.TeamModel.engineersFor(st, key);
-      const dur = durOne(qty, tbl, phases, wf, eng);
-      rows.push({ key, label, qty, dur });
-    };
 
-    // ✅ each sub-discipline reflected by multiplying quantity
-    add("wet", "Wet Utilities", Q.km * C.wetCount, window.RatesData.wetKm);
-    add("dry", "Dry Utilities", Q.km * C.dryCount, window.RatesData.dryKm);
-    add("roads", "Roads", Q.km * C.roadsCount, window.RatesData.roadsKm);
-    add("landscape", "Landscape", Q.ha * C.landscapeCount, window.RatesData.landscapeHa);
+    // ── Wet utilities: one row PER sub-discipline ──────────────────────────
+    A.wetItems.forEach(subName => {
+      const eng = window.TeamModel.engineersForKey(st, "wet", subName);
+      const dur = streamDuration(km, window.RatesData.wetKm, phases, wf, eng);
+      rows.push({ key: "wet", label: `Wet – ${subName}`, qty: km, unit: "km", eng, dur });
+    });
 
-    add("secIrr", "Secondary Irrigation", Q.greenHa, window.RatesData.secIrrHa);
+    // ── Dry utilities: one row PER sub-discipline ──────────────────────────
+    A.dryItems.forEach(subName => {
+      const eng = window.TeamModel.engineersForKey(st, "dry", subName);
+      const dur = streamDuration(km, window.RatesData.dryKm, phases, wf, eng);
+      rows.push({ key: "dry", label: `Dry – ${subName}`, qty: km, unit: "km", eng, dur });
+    });
 
-    // facilities-based
-    add("arch", "Architecture", Q.facilitiesM2, window.RatesData.archM2);
-    add("str", "Structure", Q.facilitiesM2, window.RatesData.strM2);
-    add("mep", "MEP", Q.facilitiesM2, window.RatesData.mepM2);
+    // ── Roads ──────────────────────────────────────────────────────────────
+    if (A.roads) {
+      const eng = window.TeamModel.engineersForKey(st, "roads", null);
+      const dur = streamDuration(km, window.RatesData.roadsKm, phases, wf, eng);
+      rows.push({ key: "roads", label: "Roads", qty: km, unit: "km", eng, dur });
+    }
 
+    // ── Landscape ─────────────────────────────────────────────────────────
+    if (A.landscapeCount > 0) {
+      const eng = window.TeamModel.engineersForKey(st, "landscape", null);
+      const dur = streamDuration(ha, window.RatesData.landscapeHa, phases, wf, eng);
+      rows.push({ key: "landscape", label: "Landscape", qty: ha, unit: "ha", eng, dur });
+    }
+
+    // ── Secondary Irrigation ──────────────────────────────────────────────
+    if (A.secIrr) {
+      const eng = window.TeamModel.engineersForKey(st, "secIrr", null);
+      const dur = streamDuration(greenHa, window.RatesData.secIrrHa, phases, wf, eng);
+      rows.push({ key: "secIrr", label: "Secondary Irrigation", qty: greenHa, unit: "ha", eng, dur });
+    }
+
+    // ── Architecture ──────────────────────────────────────────────────────
+    if (A.arch) {
+      const eng = window.TeamModel.engineersForKey(st, "arch", null);
+      const dur = streamDuration(facM2, window.RatesData.archM2, phases, wf, eng);
+      rows.push({ key: "arch", label: "Architecture", qty: facM2, unit: "m²", eng, dur });
+    }
+
+    // ── Structure ─────────────────────────────────────────────────────────
+    if (A.str) {
+      const eng = window.TeamModel.engineersForKey(st, "str", null);
+      const dur = streamDuration(facM2, window.RatesData.strM2, phases, wf, eng);
+      rows.push({ key: "str", label: "Structure", qty: facM2, unit: "m²", eng, dur });
+    }
+
+    // ── MEP ───────────────────────────────────────────────────────────────
+    if (A.mepAny) {
+      const eng = window.TeamModel.engineersForKey(st, "mep", null);
+      const dur = streamDuration(facM2, window.RatesData.mepM2, phases, wf, eng);
+      rows.push({ key: "mep", label: "MEP", qty: facM2, unit: "m²", eng, dur });
+    }
+
+    // Project duration = longest stream (critical path)
     const projectDuration = rows.length ? Math.max(...rows.map(r => r.dur)) : 0;
     return { rows, projectDuration };
   }

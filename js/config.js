@@ -3,18 +3,18 @@ window.APP_CONFIG = {
   currencySymbol: "$",
   drawingScales: ["1:1000", "1:500", "1:250", "1:100"],
   requiredDetailNonBim: [
-    { id: "concept", label: "Concept Design" },
+    { id: "concept",   label: "Concept Design" },
     { id: "schematic", label: "Schematic Design" },
-    { id: "detail", label: "Detail Design" },
-    { id: "shop", label: "Shop Drawing" },
-    { id: "asbuilt", label: "As-Built" }
+    { id: "detail",    label: "Detail Design" },
+    { id: "shop",      label: "Shop Drawing" },
+    { id: "asbuilt",   label: "As-Built" }
   ],
   requiredDetailBim: [
-    { id: "concept", label: "Concept Design", sub: "LOD 100" },
-    { id: "schematic", label: "Schematic Design", sub: "LOD 200" },
-    { id: "detail", label: "Detail Design", sub: "LOD 300" },
-    { id: "shop", label: "Shop Drawing", sub: "LOD 400" },
-    { id: "asbuilt", label: "As-Built", sub: "LOD 500" }
+    { id: "concept",   label: "Concept Design",   sub: "LOD 100" },
+    { id: "schematic", label: "Schematic Design",  sub: "LOD 200" },
+    { id: "detail",    label: "Detail Design",     sub: "LOD 300" },
+    { id: "shop",      label: "Shop Drawing",      sub: "LOD 400" },
+    { id: "asbuilt",   label: "As-Built",          sub: "LOD 500" }
   ],
   disciplines: {
     wet: ["Potable Water", "Sewage", "Storm", "Irrigation", "Fire Fighting"],
@@ -25,21 +25,20 @@ window.APP_CONFIG = {
   roadLandscapeItems: ["Master Planning","Roads","Secondary Irrigation","Sub-Soil Drainage"]
 };
 
-// ✅ IMPORTANT: default phases ON so duration calculates immediately once any discipline is selected
 window.DEFAULT_STATE = {
   projectName: "",
   projectAreaSqm: "",
-  durationMonths: "",            // Required Duration (user input)
+  durationMonths: "",
   drawingScale: "1:1000",
   bimRequired: false,
   lengthOverride: false,
   projectLengthManual: "",
-
+  avgManHourCost: 5.00,
   requiredDetails: { concept:true, schematic:true, detail:true, shop:true, asbuilt:true },
-
   disciplines: { wet:{}, dry:{} },
   roadLandscape: { items:{} },
   facilities: [],
-
-  teamOverrides: {}
+  teamOverrides: {},
+  autoJuniorLevel: 1,
+  _juniorManual: false
 };

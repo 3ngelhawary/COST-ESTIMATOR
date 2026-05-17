@@ -1,84 +1,78 @@
 // File: js/ui_drawings.js
 (function () {
   const { esc } = window.UIH;
+  const fmt = (n) => (Number.isFinite(n) ? Math.round(n).toLocaleString() : "0");
 
-  const fmtInt = (n)=> Number.isFinite(n) ? String(Math.round(n)) : "0";
-
-  function render(m){
+  function render(m) {
     return `
-      <div class="kpis" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="kpis" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:12px;">
         <div class="kpi">
-          <div class="kpiLabel">Selected Scale</div>
-          <div class="kpiValue">${esc(m.scale)}</div>
+          <div class="kpiLabel">Scale</div>
+          <div class="kpiValue" style="font-size:14px;">${esc(m.scale)}</div>
         </div>
         <div class="kpi">
-          <div class="kpiLabel">Usable Area / A1 Sheet (m²)</div>
-          <div class="kpiValue">${fmtInt(m.usableMain)}</div>
+          <div class="kpiLabel">Usable / A1 (m²)</div>
+          <div class="kpiValue" style="font-size:14px;">${fmt(m.usableMain)}</div>
         </div>
         <div class="kpi">
-          <div class="kpiLabel">Facilities Usable Area @ 1:100 (m²)</div>
-          <div class="kpiValue">${fmtInt(m.usableFac)}</div>
+          <div class="kpiLabel">Active Discipline Groups</div>
+          <div class="kpiValue" style="font-size:14px;">${m.activeDisciplineGroups}</div>
         </div>
       </div>
-
-      <div class="divider"></div>
 
       <div class="tableWrap">
         <table class="tTable">
           <thead>
             <tr>
               <th>Drawing Type</th>
-              <th class="tCenter" style="width:220px;">Basis</th>
-              <th class="tCenter" style="width:160px;">Result</th>
+              <th class="tCenter" style="width:200px">Basis</th>
+              <th class="tCenter" style="width:100px">Count</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><b>Plans</b></td>
-              <td class="tCenter">Plans per discipline × Active disciplines</td>
-              <td class="tCenter"><b>${fmtInt(m.totalPlans)}</b></td>
+              <td><b>Plan Sheets</b></td>
+              <td class="tCenter">${m.plansPerGroup} sheets/group × ${m.activeDisciplineGroups} groups</td>
+              <td class="tCenter"><b>${fmt(m.totalPlans)}</b></td>
             </tr>
             <tr>
-              <td class="muted">— Plans per discipline</td>
-              <td class="tCenter">${esc(m.scale)} (main) + 1:100 (facilities)</td>
-              <td class="tCenter">${fmtInt(m.plansPerDiscipline)}</td>
-            </tr>
-            <tr>
-              <td class="muted">— Active disciplines</td>
-              <td class="tCenter">Wet / Dry / Roads / Landscape / Sec.Irr / Arch / Str / MEP</td>
-              <td class="tCenter">${fmtInt(m.activeDisciplines)}</td>
+              <td class="muted" style="padding-left:18px;">— Sheets per group</td>
+              <td class="tCenter">Main @ ${esc(m.scale)} + Facilities @ 1:100</td>
+              <td class="tCenter">${m.plansPerGroup}</td>
             </tr>
 
             <tr>
-              <td><b>Profiles</b></td>
-              <td class="tCenter">1 sheet / 1000m × (Wet+Dry sub-items + Roads)</td>
-              <td class="tCenter"><b>${fmtInt(m.totalProfiles)}</b></td>
+              <td><b>Profile Sheets</b></td>
+              <td class="tCenter">ceil(Length/1000) × ${m.profileStreams} stream(s)</td>
+              <td class="tCenter"><b>${fmt(m.totalProfiles)}</b></td>
             </tr>
             <tr>
-              <td class="muted">— Base profile sheets</td>
-              <td class="tCenter">ceil(Length/1000)</td>
-              <td class="tCenter">${fmtInt(m.profileSheetsBase)}</td>
-            </tr>
-
-            <tr>
-              <td><b>Details</b></td>
-              <td class="tCenter">${fmtInt(m.detailsPerDiscipline)} drawings / active discipline</td>
-              <td class="tCenter"><b>${fmtInt(m.totalDetails)}</b></td>
+              <td class="muted" style="padding-left:18px;">— Base (per 1000 m)</td>
+              <td class="tCenter">${m.profileBase} base sheets</td>
+              <td class="tCenter"></td>
             </tr>
 
             <tr>
+              <td><b>Detail Drawings</b></td>
+              <td class="tCenter">10 per active discipline group</td>
+              <td class="tCenter"><b>${fmt(m.totalDetails)}</b></td>
+            </tr>
+
+            <tr style="background:rgba(255,255,255,0.03);">
               <td><b>Total Drawings</b></td>
               <td class="tCenter">Plans + Profiles + Details</td>
-              <td class="tCenter"><b>${fmtInt(m.totalDrawings)}</b></td>
+              <td class="tCenter"><b>${fmt(m.totalDrawings)}</b></td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="smallNote" style="margin-top:10px;">
-        Suggested plan sheet grid (main plan set only): <b>${fmtInt(m.grid.rows)} rows × ${fmtInt(m.grid.cols)} columns</b>
-      </div>
-    `;
+      ${m.grid.rows > 0
+        ? `<div class="smallNote" style="margin-top:10px;">
+             Suggested sheet grid (main plan set only):
+             <b>${m.grid.rows} rows × ${m.grid.cols} columns</b>
+           </div>`
+        : ""}`;
   }
 
   window.UIDrawings = { render };

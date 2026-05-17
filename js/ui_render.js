@@ -2,6 +2,6 @@
 (function () {
   window.UIRender = {
     renderInputs: () => window.UIInputs.renderInputs(),
-    preview: () => window.UIPreview.preview()
+    preview:      () => window.UIPreview.preview()
   };
 })();
