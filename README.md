@@ -1,15 +1,20 @@
-# Design Cost Estimator
+# Design Cost Estimator v40
 
-Engineering project cost estimator for infrastructure, utilities, and facilities design.
+Engineering project design cost estimator with full pricing breakdown.
 
-## Files
-- `index.html` — main entry point
-- `css/style.css` — all styles and CSS variables
-- `css/output.css` — card color accents
-- `js/` — modular JavaScript engines
+## Whats new in v40
+- Industrial-precision dashboard design (Barlow + DM Mono fonts)
+- Currency selector (USD, EUR, GBP, AED, EGP, SAR, QAR)
+- Overhead % and Contingency % fields with full cost breakdown
+- Cost per m² KPI
+- Schedule health bar (visual %)
+- Critical path highlighting in duration table
+- Collapsible output sections
+- CSV export with full breakdown
+- Print view
+- Animated KPIs, improved empty states
+- All v30 logic fixes retained (per-sub-discipline streams, no recursion)
 
-## Key fixes in this version
-- **Duration calculation**: each sub-discipline (Potable Water, Sewage, etc.) is now an independent work stream with its own junior engineer. Adding more sub-disciplines adds team members AND may extend the critical path — cost always increases correctly.
-- **CSS variables**: single consolidated `style.css` defines all `--text`, `--muted`, `--focus`, `--line` etc. variables.
-- **No recursion**: auto-staff uses a single-pass loop, not mutual recursion between engines.
-- **Engineers column**: duration breakdown shows how many engineers are on each stream.
+## Logic (unchanged from v30)
+Each wet/dry sub-discipline = independent work stream with dedicated junior engineer.
+Adding sub-disciplines → larger team + potential critical path extension → cost always increases.
